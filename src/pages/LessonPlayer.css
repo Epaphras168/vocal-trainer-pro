@@ -1,0 +1,114 @@
+.lesson {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.lesson__top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.lesson__progress {
+  flex: 1;
+}
+
+.lesson__crumb {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.lesson__crumbicon {
+  width: 44px;
+  height: 44px;
+}
+
+.lesson__crumbtitle {
+  font-weight: 800;
+  color: var(--text-dim);
+}
+
+.lesson__exercise {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.lesson__ask {
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.lesson__ask p {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.lesson__steptitle {
+  font-size: clamp(2rem, 6vw, 2.8rem);
+}
+
+.teach {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.teach__hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.teach__title {
+  font-size: clamp(2.6rem, 9vw, 3.6rem);
+  max-width: 9ch;
+}
+
+.teach__hero .pip {
+  flex: none;
+  width: clamp(110px, 30vw, 170px);
+  height: auto;
+}
+
+.teach__body {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.teach__demo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-lg);
+  border: 2px solid var(--line);
+  background: var(--surface);
+}
+
+.teach__demo > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.teach__demo .mute {
+  font-size: 0.88rem;
+  font-weight: 600;
+}

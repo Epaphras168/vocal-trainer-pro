@@ -1,0 +1,179 @@
+.landing {
+  position: relative;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--s-5) var(--s-12);
+  overflow: hidden;
+}
+
+.landing > * {
+  position: relative;
+}
+
+.landing__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 76px;
+}
+
+.landing__hero {
+  display: grid;
+  gap: var(--s-10);
+  align-items: center;
+  padding: var(--s-10) 0 var(--s-12);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .landing__hero {
+    grid-template-columns: 1.2fr 0.8fr;
+    padding: var(--s-16) 0;
+  }
+}
+
+.landing__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-6);
+}
+
+.landing__chipicon {
+  color: var(--accent);
+}
+
+.landing__title {
+  font-size: clamp(3rem, 9vw, 5.6rem);
+  font-weight: 900;
+  line-height: 0.95;
+}
+
+.landing__lede {
+  font-size: 1.15rem;
+  max-width: 34ch;
+}
+
+.landing__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.landing__card {
+  position: relative;
+  justify-self: center;
+  width: min(360px, 100%);
+  padding: var(--s-6);
+  border-radius: var(--r-xl);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 40px 80px -40px var(--accent), var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.landing__card > .spread {
+  width: 100%;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.landing__streak {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--accent);
+}
+
+.landing__gems {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--teal);
+}
+
+.landing__cardtitle {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-weight: 900;
+  font-size: 1.6rem;
+  margin-top: var(--s-2);
+}
+
+.landing__cardsub {
+  font-size: 0.9rem;
+}
+
+.landing__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100px;
+  width: 100%;
+  margin-top: var(--s-5);
+}
+
+.landing__bars span {
+  flex: 1;
+  border-radius: 8px 8px 4px 4px;
+  background: var(--accent);
+  opacity: 0.9;
+  transform-origin: bottom;
+  animation: bar-grow 0.6s var(--ease-spring) both;
+}
+
+.landing__bars span.is-gold {
+  background: var(--gold);
+}
+
+.landing__xp {
+  position: absolute;
+  left: -14px;
+  bottom: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-weight: 900;
+  transform: rotate(-6deg);
+  box-shadow: 0 4px 0 var(--gold-strong);
+}
+
+.landing__features {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.landing__features .card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.landing__features h3 {
+  margin-top: var(--s-3);
+  font-size: 1.5rem;
+}
+
+.landing__foot {
+  margin-top: var(--s-10);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}

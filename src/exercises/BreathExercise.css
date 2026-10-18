@@ -1,0 +1,106 @@
+.breath {
+  width: 100%;
+  display: grid;
+  gap: var(--s-6);
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 880px) {
+  .breath {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+.breath__orb {
+  position: relative;
+  width: min(78vw, 360px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.breath__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.breath__track {
+  fill: none;
+  stroke: var(--surface-3);
+  stroke-width: 14;
+}
+
+.breath__progress {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset 0.12s linear;
+}
+
+.breath__core {
+  width: 72%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: radial-gradient(circle at 35% 30%, var(--teal), var(--teal-strong));
+  color: #03231d;
+  box-shadow: 0 0 calc(20px + var(--level, 0) * 60px) rgba(58, 214, 187, calc(0.2 + var(--level, 0) * 0.5));
+  transform: scale(calc(0.9 + var(--level, 0) * 0.12));
+  transition: transform 0.1s linear, box-shadow 0.1s linear;
+}
+
+.breath__orb--inhale .breath__core {
+  animation: inhale 3.2s var(--ease-out) both;
+}
+
+.breath__secs {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 12vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.breath__label {
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.breath__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.breath__level {
+  height: 14px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.breath__level span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  transition: width 0.08s linear;
+}
+
+@keyframes inhale {
+  from {
+    transform: scale(0.55);
+  }
+  to {
+    transform: scale(1);
+  }
+}

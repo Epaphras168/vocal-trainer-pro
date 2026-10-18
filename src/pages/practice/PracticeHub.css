@@ -1,0 +1,93 @@
+.practice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.practice__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.practice__title {
+  font-size: clamp(2.4rem, 7vw, 3.4rem);
+  margin: 4px 0 8px;
+}
+
+.practice__grid {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+.drillcard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  transition: transform 0.2s var(--ease-spring), border-color 0.2s ease;
+}
+
+.drillcard:hover {
+  transform: translateY(-4px) rotate(-0.5deg);
+  border-color: var(--accent);
+}
+
+.drillcard__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.drillcard__title {
+  font-size: 1.5rem;
+}
+
+.drillcard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drillcard__go {
+  color: var(--accent);
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.drillcard:hover .drillcard__go {
+  transform: translateX(4px);
+}
+
+.drillcard--feature {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: transparent;
+  box-shadow: 0 6px 0 var(--gold-strong);
+}
+
+.drillcard--feature .dim {
+  color: var(--gold-ink);
+  opacity: 0.8;
+}
+
+.drillcard--feature .tile-icon {
+  background: var(--gold-ink);
+  color: var(--gold);
+  box-shadow: none;
+}
+
+.drillcard--feature .chip {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: transparent;
+  color: var(--gold-ink);
+}
+
+.drillcard--feature .drillcard__go {
+  color: var(--gold-ink);
+}
+
+.drillcard--feature:hover {
+  border-color: transparent;
+}

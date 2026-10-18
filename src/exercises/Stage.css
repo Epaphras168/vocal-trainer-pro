@@ -1,0 +1,133 @@
+.stage {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'roll'
+    'side'
+    'footer';
+}
+
+.stage__roll {
+  grid-area: roll;
+  height: clamp(260px, 42vh, 440px);
+}
+
+.stage__side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.stage__footer {
+  grid-area: footer;
+}
+
+@media (min-width: 880px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-areas:
+      'roll side'
+      'footer footer';
+  }
+  .stage__roll {
+    height: 440px;
+  }
+}
+
+.coach {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  text-align: center;
+  padding: var(--s-5);
+}
+
+.coach__msg {
+  min-height: 3em;
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* On phones keep Pip compact beside the message. */
+@media (max-width: 879px) {
+  .coach {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    text-align: left;
+    align-items: center;
+  }
+  .coach .pip {
+    width: 72px;
+    height: auto;
+  }
+  .coach > :not(.pip):not(.coach__msg) {
+    grid-column: 1 / -1;
+  }
+  .coach__msg {
+    min-height: 0;
+  }
+}
+
+.holdmeter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.holdmeter__sparkles {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.stage-controls {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.stage-controls .btn--grow {
+  flex: 1;
+}
+
+.notes-strip {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.notes-strip span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--text-mute);
+  transition: all 0.25s var(--ease-spring);
+}
+
+.notes-strip span[data-state='hit'] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--gold-ink);
+  transform: scale(1.08);
+}
+
+.notes-strip span[data-state='miss'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.notes-strip span[data-state='now'] {
+  border-color: var(--gold);
+  color: var(--text);
+}

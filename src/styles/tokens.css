@@ -1,0 +1,163 @@
+/* Belto design tokens.
+   Type: Fraunces (soft, wonky display serif) + Figtree (friendly, legible UI sans).
+   Colour: warm plum night with ember orange, stage-light gold and gem teal;
+   light mode is warm paper and plum ink, designed rather than inverted. */
+
+:root {
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  --font-body: 'Figtree Variable', 'Figtree', ui-sans-serif, system-ui, sans-serif;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-pill: 999px;
+
+  --press: 5px;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --page-max: 1120px;
+  --column: 560px;
+}
+
+/* ---------- Dark: plum night ---------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #1b0f1d;
+  --bg-deep: #140a16;
+  --surface: #26142c;
+  --surface-2: #311a3a;
+  --surface-3: #3d2247;
+  --line: #45284f;
+  --line-strong: #5a3666;
+  --text: #fbefe2;
+  --text-dim: #d6c1d2;
+  --text-mute: #9b8399;
+
+  --gold: #f4d03f;
+  --gold-strong: #b8971a;
+  --gold-ink: #2b1c03;
+  --gold-soft: rgba(244, 208, 63, 0.16);
+  --gold-glow: rgba(244, 208, 63, 0.45);
+
+  --teal: #3ad6bb;
+  --teal-strong: #1f9480;
+  --teal-soft: rgba(58, 214, 187, 0.14);
+  --pink: #e35fcf;
+  --pink-strong: #a43293;
+  --violet: #a98bff;
+  --violet-strong: #6c4fd1;
+  --good: #8edc6a;
+  --miss: #ff7d8a;
+
+  --tip-bg: #6b5420;
+  --tip-text: #fbe9b5;
+
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 50px -30px rgba(0, 0, 0, 0.8);
+  --glow-1: rgba(255, 122, 69, 0.22);
+  --glow-2: rgba(244, 208, 63, 0.14);
+  --staff: rgba(251, 239, 226, 0.06);
+  --roll-bg: #211127;
+  --roll-row: rgba(255, 255, 255, 0.025);
+  /* Chart series, validated for CVD separation and contrast on --surface. */
+  --series-1: #18a68f;
+  --series-2: #b88d0c;
+}
+
+/* ---------- Light: warm paper, plum ink ---------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #fbf1e4;
+  --bg-deep: #f4e4d1;
+  --surface: #fffaf3;
+  --surface-2: #f7eadb;
+  --surface-3: #efdcc7;
+  --line: #ead3bb;
+  --line-strong: #dcbd9e;
+  --text: #2a1230;
+  --text-dim: #5e4561;
+  --text-mute: #8e7489;
+
+  --gold: #f2c418;
+  --gold-strong: #c79a00;
+  --gold-ink: #2b1c03;
+  --gold-soft: rgba(242, 196, 24, 0.2);
+  --gold-glow: rgba(214, 160, 0, 0.4);
+
+  --teal: #0f9f87;
+  --teal-strong: #0a7262;
+  --teal-soft: rgba(15, 159, 135, 0.12);
+  --pink: #c93db5;
+  --pink-strong: #8f1f7f;
+  --violet: #7856e6;
+  --violet-strong: #5134b8;
+  --good: #3f9c2a;
+  --miss: #d8344a;
+
+  --tip-bg: #fbe7a6;
+  --tip-text: #4d3606;
+
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 18px 40px -28px rgba(90, 40, 30, 0.45);
+  --glow-1: rgba(255, 122, 69, 0.18);
+  --glow-2: rgba(242, 196, 24, 0.2);
+  --staff: rgba(42, 18, 48, 0.06);
+  --roll-bg: #fff6ea;
+  --roll-row: rgba(42, 18, 48, 0.03);
+  --series-1: #0f9f87;
+  --series-2: #a88200;
+}
+
+/* ---------- Accent themes (earned with gems) ---------- */
+:root[data-accent='ember'] {
+  --accent: #ff7d47;
+  --accent-strong: #c4522a;
+  --accent-ink: #2a0f12;
+  --accent-soft: rgba(255, 125, 71, 0.15);
+}
+:root[data-theme='light'][data-accent='ember'] {
+  --accent: #f26a33;
+  --accent-strong: #b3461b;
+}
+:root[data-accent='lagoon'] {
+  --accent: #2fc7d8;
+  --accent-strong: #15808d;
+  --accent-ink: #04242a;
+  --accent-soft: rgba(47, 199, 216, 0.15);
+}
+:root[data-theme='light'][data-accent='lagoon'] {
+  --accent: #14a3b4;
+  --accent-strong: #0b6d79;
+}
+:root[data-accent='orchid'] {
+  --accent: #ee6fd8;
+  --accent-strong: #a8379a;
+  --accent-ink: #2c0626;
+  --accent-soft: rgba(238, 111, 216, 0.15);
+}
+:root[data-theme='light'][data-accent='orchid'] {
+  --accent: #d54bbd;
+  --accent-strong: #93267f;
+}
+:root[data-accent='citrus'] {
+  --accent: #a6e04a;
+  --accent-strong: #5f8f1c;
+  --accent-ink: #172505;
+  --accent-soft: rgba(166, 224, 74, 0.15);
+}
+:root[data-theme='light'][data-accent='citrus'] {
+  --accent: #7dbd22;
+  --accent-strong: #4d7a12;
+}

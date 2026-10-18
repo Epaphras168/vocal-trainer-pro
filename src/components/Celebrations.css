@@ -1,0 +1,63 @@
+.levelup {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  background: color-mix(in srgb, var(--bg-deep) 80%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.levelup__card {
+  width: min(400px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-6);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  text-align: center;
+}
+
+.levelup__num {
+  display: grid;
+  place-items: center;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 900;
+  box-shadow: 0 8px 0 var(--accent-strong), 0 0 60px var(--accent-soft);
+}
+
+.toast {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 95;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-5) var(--s-3) var(--s-3);
+  border-radius: var(--r-lg);
+  border: 2px solid var(--gold);
+  background: var(--surface);
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.6);
+  text-align: left;
+}
+
+.toast__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.toast__text .eyebrow {
+  font-size: 0.65rem;
+}

@@ -1,0 +1,128 @@
+.rhythm {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.rhythm__track {
+  position: relative;
+  height: 120px;
+  margin: 0 var(--s-4);
+  border-bottom: 3px solid var(--line);
+}
+
+.rhythm__tick {
+  position: absolute;
+  bottom: -3px;
+  width: 3px;
+  height: 22px;
+  margin-left: -1.5px;
+  background: var(--line-strong);
+  border-radius: 2px;
+}
+
+.rhythm__tick em {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.75rem;
+  color: var(--text-mute);
+}
+
+.rhythm__dot {
+  position: absolute;
+  bottom: 30px;
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 4px 0 var(--gold-strong);
+  transition: opacity 0.3s ease, transform 0.3s var(--ease-spring);
+}
+
+.rhythm__dot[data-past='true'] {
+  opacity: 0.35;
+  transform: scale(0.8);
+}
+
+.rhythm__tap {
+  position: absolute;
+  bottom: 70px;
+  width: 6px;
+  height: 26px;
+  margin-left: -3px;
+  border-radius: 3px;
+  animation: pop-in 0.3s var(--ease-spring);
+}
+
+.rhythm__tap--good {
+  background: var(--teal);
+}
+
+.rhythm__tap--ok {
+  background: var(--gold);
+}
+
+.rhythm__tap--off {
+  background: var(--miss);
+}
+
+.rhythm__cursor {
+  position: absolute;
+  top: 0;
+  bottom: -3px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.rhythm__count {
+  font-variation-settings: 'SOFT' 100, 'WONK' 0;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--accent);
+  animation: count-pop 0.9s var(--ease-out) both;
+}
+
+.rhythm__pad {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--s-2);
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 900;
+  font-size: 1.2rem;
+  box-shadow: 0 8px 0 var(--accent-strong);
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.rhythm__pad:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 var(--accent-strong);
+}
+
+.rhythm__pad--mic {
+  background: var(--surface-2);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--accent);
+}

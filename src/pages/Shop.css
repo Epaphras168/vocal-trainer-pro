@@ -1,0 +1,152 @@
+.shop {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.shop__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.shop__title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 3rem;
+  margin: 4px 0;
+}
+
+.shop__gem {
+  color: var(--teal);
+}
+
+.shop__flash {
+  align-self: center;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  background: var(--teal);
+  color: #03231d;
+  font-weight: 800;
+}
+
+.shop__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+
+.shop__body {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.shop__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-lg);
+}
+
+.shop__icon--ice {
+  background: #8fd3ff;
+  color: #0b3550;
+  box-shadow: 0 5px 0 #4b9ccc;
+}
+
+.shop__owned {
+  display: flex;
+  gap: 6px;
+}
+
+.shop__owned span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  color: var(--text-mute);
+}
+
+.shop__owned span[data-on='true'] {
+  background: #8fd3ff;
+  color: #0b3550;
+}
+
+.shop__palette {
+  color: var(--accent);
+}
+
+.shop__accents {
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.accent-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  border: 2px solid var(--line);
+  background: var(--surface-2);
+  text-align: left;
+  font-size: 0.85rem;
+  transition: transform 0.2s var(--ease-spring), border-color 0.2s ease;
+}
+
+.accent-card:hover {
+  transform: translateY(-3px);
+}
+
+.accent-card.is-on {
+  border-color: var(--sw);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw) 30%, transparent);
+}
+
+.accent-card strong {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.accent-card__swatch {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--s-2);
+}
+
+.accent-card__swatch span {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--sw);
+}
+
+.accent-card__swatch span:nth-child(2) {
+  background: var(--gold);
+}
+
+.accent-card__swatch span:nth-child(3) {
+  background: var(--teal);
+}
+
+.accent-card__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--s-2);
+  font-weight: 900;
+  color: var(--teal);
+}

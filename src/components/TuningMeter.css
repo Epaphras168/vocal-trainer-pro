@@ -1,0 +1,80 @@
+.tuner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.tuner__note {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition: color 0.15s ease, transform 0.2s var(--ease-spring);
+}
+
+.tuner[data-state='on'] .tuner__note {
+  color: var(--gold);
+  transform: scale(1.08);
+}
+
+.tuner[data-state='idle'] .tuner__note {
+  color: var(--text-mute);
+}
+
+.tuner__track {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  container-type: inline-size;
+}
+
+.tuner__zone {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: var(--r-pill);
+  background: var(--gold-soft);
+  box-shadow: inset 0 0 0 2px var(--gold);
+  opacity: 0.8;
+}
+
+.tuner__needle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  border-radius: 50%;
+  background: var(--text-mute);
+  border: 3px solid var(--surface);
+  transform: translateX(-50%);
+  transition: transform 0.06s linear, background 0.15s ease;
+}
+
+.tuner[data-state='on'] .tuner__needle {
+  background: var(--gold);
+  box-shadow: 0 0 16px var(--gold-glow);
+}
+
+.tuner[data-state='flat'] .tuner__needle,
+.tuner[data-state='sharp'] .tuner__needle {
+  background: var(--accent);
+}
+
+.tuner__labels {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}

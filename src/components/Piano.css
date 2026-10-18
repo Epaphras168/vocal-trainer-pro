@@ -1,0 +1,64 @@
+.piano {
+  width: 100%;
+  height: auto;
+  max-height: 140px;
+}
+
+.piano__key {
+  transition: fill 0.15s ease;
+}
+
+.piano__key.is-white {
+  fill: var(--text);
+  opacity: 0.92;
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+
+:root[data-theme='light'] .piano__key.is-white {
+  fill: #fff;
+  stroke: var(--line-strong);
+}
+
+.piano__key.is-black {
+  fill: var(--bg-deep);
+  stroke: var(--line);
+}
+
+:root[data-theme='light'] .piano__key.is-black {
+  fill: var(--text);
+}
+
+:root .piano__key.is-ghost.is-white {
+  fill: var(--teal);
+  opacity: 0.55;
+}
+
+:root .piano__key.is-range.is-white {
+  fill: var(--accent);
+  opacity: 1;
+}
+
+:root .piano__key.is-range.is-black {
+  fill: var(--accent-strong);
+}
+
+:root[data-theme] .piano__key.is-live {
+  fill: var(--gold);
+  opacity: 1;
+}
+
+.piano__label {
+  font-size: 7px;
+  font-weight: 800;
+  fill: var(--text-mute);
+  font-family: var(--font-body);
+}
+
+:root[data-theme='dark'] .piano__label {
+  fill: #6b5770;
+}
+
+.piano__key.is-range + .piano__label {
+  fill: var(--accent-ink);
+}

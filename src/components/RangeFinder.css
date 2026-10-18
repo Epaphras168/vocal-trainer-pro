@@ -1,0 +1,68 @@
+.rangefinder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.rangefinder__steps {
+  display: flex;
+  gap: var(--s-2);
+  justify-content: center;
+}
+
+.rangefinder__steps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--line);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--text-mute);
+}
+
+.rangefinder__steps span[data-active='true'] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.rangefinder__steps span[data-done='true'] {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.rangefinder__grid {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 880px) {
+  .rangefinder__grid {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+}
+
+.rangefinder__found {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-5);
+}
+
+.rangefinder__ends {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.rangefinder__ends strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1.1;
+}

@@ -1,0 +1,23 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logo .pip {
+  margin-top: -4px;
+}
+
+.logo__word {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.logo__dot {
+  color: var(--accent);
+}
