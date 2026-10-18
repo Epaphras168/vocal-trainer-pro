@@ -1,20 +1,24 @@
-import { useEffect } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { rememberInvite, useAccount } from '../cloud/account';
 import { useGame } from '../game/store';
 import { Logo } from '../components/Logo';
 import { Mascot } from '../components/Mascot';
-import { SignInPanel } from '../components/SignInPanel';
+import { NewPasswordPanel, SignInPanel } from '../components/SignInPanel';
 
 /** For returning singers on a new device: sign in, pull progress, carry on. */
 export function SignIn() {
   const nav = useNavigate();
   const status = useAccount((s) => s.status);
   const onboarded = useGame((s) => s.onboarded);
+  // Arriving from a password-reset email: stay here to choose a new password.
+  const [params] = useSearchParams();
+  const [resetting, setResetting] = useState(params.get('reset') === '1');
+  const go = () => nav(onboarded ? '/home' : '/onboarding', { replace: true });
 
   useEffect(() => {
-    if (status === 'signed-in') nav(onboarded ? '/home' : '/onboarding', { replace: true });
-  }, [status, onboarded, nav]);
+    if (status === 'signed-in' && !resetting) nav(onboarded ? '/home' : '/onboarding', { replace: true });
+  }, [status, onboarded, nav, resetting]);
 
   return (
     <div className="column stack" style={{ paddingTop: 'var(--s-4)' }}>
@@ -29,6 +33,13 @@ export function SignIn() {
           <p className="dim" style={{ textAlign: 'center' }}>
             Fetching your progress...
           </p>
+        ) : status === 'signed-in' && resetting ? (
+          <NewPasswordPanel
+            onDone={() => {
+              setResetting(false);
+              go();
+            }}
+          />
         ) : (
           <SignInPanel title="Welcome back" blurb="Sign in to pick up your path, streak and friends on this device." />
         )}

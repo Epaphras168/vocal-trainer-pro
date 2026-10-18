@@ -21,7 +21,8 @@ interface BoardRecord {
   last_active: string | null;
 }
 
-const toUser = (u: User | null | undefined): CloudUser | null => (u ? { id: u.id, email: u.email ?? null } : null);
+const toUser = (u: User | null | undefined): CloudUser | null =>
+  u ? { id: u.id, email: u.email ?? null, name: (u.user_metadata?.full_name ?? u.user_metadata?.name ?? null) as string | null } : null;
 
 function profileColumns(s: ProfileSummary) {
   return {
@@ -67,18 +68,34 @@ export function createSupabaseBackend(url: string, key: string): CloudBackend {
       return () => data.subscription.unsubscribe();
     },
 
-    async sendCode(email) {
-      const { error } = await sb.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true, emailRedirectTo: `${location.origin}/friends` },
+    async signInWithGoogle() {
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${location.origin}${location.pathname}` },
       });
       if (error) throw new Error(error.message);
     },
 
-    async verifyCode(email, code) {
-      const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
-      if (error || !data.user) throw new Error(error?.message ?? 'That code did not work');
-      return toUser(data.user)!;
+    async signInWithPassword(email, password) {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(error.message);
+    },
+
+    async signUp(email, password) {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/friends` } });
+      if (error) throw new Error(error.message);
+      // No session means the project asks new users to confirm their email first.
+      return data.session ? 'signed-in' : 'confirm-email';
+    },
+
+    async sendPasswordReset(email) {
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/signin?reset=1` });
+      if (error) throw new Error(error.message);
+    },
+
+    async updatePassword(password) {
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) throw new Error(error.message);
     },
 
     async signOut() {

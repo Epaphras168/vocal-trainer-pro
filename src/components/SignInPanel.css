@@ -11,34 +11,62 @@
 }
 
 .signin__form .onb__label {
-  margin-top: var(--s-2);
+  margin-top: var(--s-1);
 }
 
-.signin__note {
+.signin__google {
+  margin-top: var(--s-2);
+  --btn-bg: #fff;
+  --btn-ink: #1f1f1f;
+  --btn-edge: #d6cdd4;
+}
+
+.signin__or {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
+  gap: var(--s-3);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.signin__or::before,
+.signin__or::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+}
+
+.signin__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.signin__link:hover {
+  text-decoration: underline;
+}
+
+.signin__switch {
+  text-align: center;
   font-weight: 600;
+  color: var(--text-dim);
 }
 
-.signin__note svg {
-  color: var(--teal);
-  flex: none;
-}
-
-.signin__sent {
+.signin__notice {
   padding: var(--s-3) var(--s-4);
   border-radius: var(--r-md);
   background: var(--teal-soft);
-  font-weight: 600;
-}
-
-.signin__code {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  letter-spacing: 0.3em;
-  text-align: center;
+  font-weight: 700;
 }
 
 .signin__error {

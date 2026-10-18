@@ -5,7 +5,12 @@
 export interface CloudUser {
   id: string;
   email: string | null;
+  /** Display name from the sign-in provider (e.g. a Google account name). */
+  name: string | null;
 }
+
+/** Signing up may need an email confirmation first, depending on project settings. */
+export type SignUpResult = 'signed-in' | 'confirm-email';
 
 /** What friends can see about you, written after each session. */
 export interface ProfileSummary {
@@ -47,9 +52,13 @@ export type AddFriendResult = 'requested' | 'accepted' | 'already_friends' | 'al
 export interface CloudBackend {
   currentUser(): Promise<CloudUser | null>;
   onAuthChange(cb: (user: CloudUser | null) => void): () => void;
-  /** Emails a sign-in link that also carries a 6-digit code. */
-  sendCode(email: string): Promise<void>;
-  verifyCode(email: string, code: string): Promise<CloudUser>;
+  /** Redirects to Google and back; the session is picked up on return. */
+  signInWithGoogle(): Promise<void>;
+  signInWithPassword(email: string, password: string): Promise<void>;
+  signUp(email: string, password: string): Promise<SignUpResult>;
+  /** Emails a link that brings the singer back to /signin?reset=1, signed in, to choose a new password. */
+  sendPasswordReset(email: string): Promise<void>;
+  updatePassword(password: string): Promise<void>;
   signOut(): Promise<void>;
 
   /** Creates the profile on first sign-in; returns the singer's friend code. */

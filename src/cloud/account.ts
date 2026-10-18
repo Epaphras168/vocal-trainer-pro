@@ -71,6 +71,8 @@ async function signedIn(user: CloudUser): Promise<void> {
     const local = snapshot(useGame.getState());
     const merged = mergeProgress(local, remote as Parameters<typeof mergeProgress>[1]);
     if (merged !== local) useGame.setState(merged);
+    // Signed in with Google before choosing a name? Use their first name.
+    if (!useGame.getState().name && user.name) useGame.setState({ name: user.name.split(' ')[0].slice(0, 24) });
     const { friendCode } = await b.ensureProfile(buildSummary(useGame.getState(), user.id));
     await pushAll(user.id);
     useAccount.setState({ status: 'signed-in', friendCode });

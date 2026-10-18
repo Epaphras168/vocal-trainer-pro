@@ -3,7 +3,8 @@ import type { AddFriendResult, CloudBackend, CloudUser, FriendRow, ProfileSummar
 
 // A pretend server kept in localStorage, for local development and demos
 // without a Supabase project. Enabled with VITE_CLOUD_MOCK=true; never part of
-// a production build otherwise. Any 6-digit code signs you in.
+// a production build otherwise. Google sign-in works instantly, and any
+// email with a password of 6+ characters signs in or signs up.
 
 const KEY = 'belto-mock-cloud';
 
@@ -54,6 +55,11 @@ let state = load();
 const listeners = new Set<(u: CloudUser | null) => void>();
 const save = () => localStorage.setItem(KEY, JSON.stringify(state));
 const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+const signIn = (user: CloudUser) => {
+  state.user = user;
+  save();
+  listeners.forEach((l) => l(user));
+};
 
 export const mockBackend: CloudBackend = {
   async currentUser() {
@@ -63,16 +69,26 @@ export const mockBackend: CloudBackend = {
     listeners.add(cb);
     return () => listeners.delete(cb);
   },
-  async sendCode() {
+  async signInWithGoogle() {
+    await wait();
+    signIn({ id: 'mock-user', email: 'singer@gmail.com', name: 'Google Singer' });
+  },
+  async signInWithPassword(email, password) {
+    await wait();
+    if (password.length < 6) throw new Error('Invalid login credentials');
+    signIn({ id: 'mock-user', email, name: null });
+  },
+  async signUp(email, password) {
+    await wait();
+    if (password.length < 6) throw new Error('Password should be at least 6 characters.');
+    signIn({ id: 'mock-user', email, name: null });
+    return 'signed-in';
+  },
+  async sendPasswordReset() {
     await wait();
   },
-  async verifyCode(email, code) {
+  async updatePassword() {
     await wait();
-    if (!/^\d{6}$/.test(code)) throw new Error('That code did not work. Check the email and try again.');
-    state.user = { id: 'mock-user', email };
-    save();
-    listeners.forEach((l) => l(state.user));
-    return state.user;
   },
   async signOut() {
     state.user = null;
