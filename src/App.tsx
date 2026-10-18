@@ -10,7 +10,9 @@ import { Home } from './pages/Home';
 import { PathMap } from './pages/PathMap';
 import { LessonPlayer } from './pages/LessonPlayer';
 import { Profile } from './pages/Profile';
-import { League } from './pages/League';
+import { Friends } from './pages/Friends';
+import { AddInvite, SignIn } from './pages/SignIn';
+import { initCloud } from './cloud/account';
 import { Shop } from './pages/Shop';
 import { PracticeHub } from './pages/practice/PracticeHub';
 import { RangeTest } from './pages/practice/RangeTest';
@@ -35,13 +37,17 @@ export function App() {
   useThemeSync();
   const reconcile = useGame((s) => s.reconcile);
 
-  // Settle streak freezes and league weeks on launch and whenever the app comes back.
+  // Settle streak freezes on launch and whenever the app comes back.
   useEffect(() => {
     reconcile();
     const onVisible = () => document.visibilityState === 'visible' && reconcile();
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [reconcile]);
+
+  useEffect(() => {
+    void initCloud();
+  }, []);
 
   return (
     <BrowserRouter>
@@ -51,12 +57,14 @@ export function App() {
         <Route path="/" element={<Root />} />
         <Route path="/welcome" element={<Landing />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/signin" element={<main className="focus"><SignIn /></main>} />
+        <Route path="/add/:code" element={<AddInvite />} />
         <Route path="/try" element={<main className="focus"><FreeSing guest /></main>} />
         <Route element={<AppShell />}>
           <Route path="/home" element={<Home />} />
           <Route path="/path" element={<PathMap />} />
           <Route path="/practice" element={<PracticeHub />} />
-          <Route path="/league" element={<League />} />
+          <Route path="/friends" element={<Friends />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/shop" element={<Shop />} />
         </Route>

@@ -4,20 +4,29 @@ import { motion } from 'motion/react';
 import { Logo } from '../components/Logo';
 import { Mascot } from '../components/Mascot';
 import { useGame } from '../game/store';
+import { useAccount } from '../cloud/account';
 import './Landing.css';
 
 const BARS = [40, 55, 70, 62, 48, 44, 30, 22, 50, 66, 92];
 
 export function Landing() {
   const onboarded = useGame((s) => s.onboarded);
+  const cloudOn = useAccount((s) => s.status !== 'disabled');
   return (
     <div className="landing">
       <div className="ambient" aria-hidden="true" />
       <header className="landing__top">
         <Logo />
-        <Link to={onboarded ? '/home' : '/onboarding'} className="btn btn--ghost btn--sm">
-          {onboarded ? 'Open app' : 'Get started'}
-        </Link>
+        <div className="row">
+          {!onboarded && cloudOn && (
+            <Link to="/signin" className="btn btn--ghost btn--sm">
+              Sign in
+            </Link>
+          )}
+          <Link to={onboarded ? '/home' : '/onboarding'} className="btn btn--sm">
+            {onboarded ? 'Open app' : 'Get started'}
+          </Link>
+        </div>
       </header>
 
       <section className="landing__hero staff-bg">
@@ -91,7 +100,7 @@ export function Landing() {
             <Flame size={24} />
           </span>
           <h3>Streaks that stick</h3>
-          <p className="dim">Earn XP and gems, protect your streak, climb the weekly league.</p>
+          <p className="dim">Earn XP and gems, protect your streak, and see how your friends rank each week.</p>
         </article>
       </section>
 

@@ -1,0 +1,50 @@
+.signin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.signin__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.signin__form .onb__label {
+  margin-top: var(--s-2);
+}
+
+.signin__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.signin__note svg {
+  color: var(--teal);
+  flex: none;
+}
+
+.signin__sent {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--teal-soft);
+  font-weight: 600;
+}
+
+.signin__code {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.signin__error {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--miss) 14%, transparent);
+  color: var(--text);
+  font-weight: 700;
+}

@@ -3,12 +3,12 @@ import { persist } from 'zustand/middleware';
 import { ALL_LESSONS, UNITS } from '../content/curriculum';
 import { classifyVoice, nameToMidi, type VoiceType } from '../audio/notes';
 import { BADGES, type Badge, type BadgeContext } from './badges';
-import { addDays, dayKey, daysBetween, weekDays, weekStart, type DayKey } from './dates';
-import { outcomeFor, podiumGems, standings, type Outcome } from './league';
+import { addDays, dayKey, daysBetween, weekDays, type DayKey } from './dates';
 import { gemsFor, levelFromXp, xpFor, type XpBreakdown } from './levels';
 
-// All progress lives on this device (localStorage). The store is the single
-// place rewards are granted, so XP, streaks, gems and badges stay consistent.
+// Progress lives on this device (localStorage) and, once signed in, is synced
+// to the cloud (see src/cloud). The store is the single place rewards are
+// granted, so XP, streaks, gems and badges stay consistent.
 
 export type GoalId = 'fun' | 'confidence' | 'song' | 'choir' | 'career';
 export type ActivityKind = 'lesson' | 'range' | 'accuracy' | 'game' | 'warmup' | 'free' | 'ear';
@@ -36,15 +36,6 @@ export interface LessonRecord {
   completedAt: number;
   best: number;
   plays: number;
-}
-
-export interface LeagueResult {
-  weekId: DayKey;
-  rank: number;
-  fromTier: number;
-  toTier: number;
-  outcome: Outcome;
-  gems: number;
 }
 
 export interface Reward {
@@ -86,11 +77,8 @@ export interface GameState {
   badges: Record<string, number>;
   questsClaimed: Record<DayKey, string[]>;
   gameBest: number;
-  promotions: number;
-
-  leagueWeek: DayKey;
-  leagueTier: number;
-  leagueResult: LeagueResult | null;
+  /** Accepted friends, kept in sync by the Friends screen (for badges). */
+  friendCount: number;
 
   theme: ThemePref;
   accent: AccentId;
@@ -127,7 +115,7 @@ interface Actions {
   setTheme(t: ThemePref): void;
   setSound(on: boolean): void;
   dismissCelebration(id: number): void;
-  dismissLeagueResult(): void;
+  setFriendCount(n: number): void;
   acknowledgeLostStreak(): void;
   reconcile(now?: Date): void;
   resetAll(): void;
@@ -138,7 +126,6 @@ export const MAX_FREEZES = 3;
 export const CHEST_GEMS = 15;
 
 function initialState(): GameState {
-  const today = dayKey();
   return {
     name: '',
     goal: 'fun',
@@ -162,10 +149,7 @@ function initialState(): GameState {
     badges: {},
     questsClaimed: {},
     gameBest: 0,
-    promotions: 0,
-    leagueWeek: weekStart(today),
-    leagueTier: 0,
-    leagueResult: null,
+    friendCount: 0,
     theme: 'system',
     accent: 'ember',
     ownedAccents: ['ember'],
@@ -175,6 +159,19 @@ function initialState(): GameState {
 }
 
 let celebrationId = 1;
+
+const LEGACY_KEYS = ['leagueWeek', 'leagueTier', 'leagueResult', 'promotions'];
+
+function withoutLegacyKeys(state: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(state).filter(([k]) => !LEGACY_KEYS.includes(k)));
+}
+
+/** The saved part of the state: everything except actions and transient UI queues. */
+export function snapshot(s: GameState): Partial<GameState> {
+  const { celebrations: _c, ...rest } = s;
+  void _c;
+  return Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v !== 'function')) as Partial<GameState>;
+}
 
 export function weekXp(xpByDay: Record<DayKey, number>, weekId: DayKey): number {
   return weekDays(weekId).reduce((sum, d) => sum + (xpByDay[d] ?? 0), 0);
@@ -195,7 +192,7 @@ function badgeContext(s: GameState): BadgeContext {
     rangeSemitones: s.range ? s.range.high - s.range.low : 0,
     unitsCompleted: unitsCompleted(s.lessons),
     gameBest: s.gameBest,
-    promotions: s.promotions,
+    friends: s.friendCount,
     warmups: s.activity.filter((a) => a.kind === 'warmup').length,
   };
 }
@@ -216,26 +213,6 @@ function settleStreak(s: GameState, today: DayKey): Partial<GameState> {
     return { freezes: s.freezes - missed, frozenDays: [...s.frozenDays, ...frozen], lastActive: addDays(today, -1) };
   }
   return { lostStreak: s.streak, streak: 0 };
-}
-
-function settleLeague(s: GameState, today: DayKey): Partial<GameState> {
-  const current = weekStart(today);
-  if (s.leagueWeek === current) return {};
-  const youXp = weekXp(s.xpByDay, s.leagueWeek);
-  // Skipped a whole week without singing: nothing to report, just roll over.
-  if (youXp === 0) return { leagueWeek: current };
-  const table = standings(s.leagueWeek, s.leagueTier, s.name, youXp, 1);
-  const rank = table.find((r) => r.isYou)?.rank ?? table.length;
-  const outcome = outcomeFor(rank, s.leagueTier, youXp);
-  const toTier = s.leagueTier + (outcome === 'promoted' ? 1 : outcome === 'demoted' ? -1 : 0);
-  const gems = podiumGems(rank);
-  return {
-    leagueWeek: current,
-    leagueTier: toTier,
-    gems: s.gems + gems,
-    promotions: s.promotions + (outcome === 'promoted' ? 1 : 0),
-    leagueResult: { weekId: s.leagueWeek, rank, fromTier: s.leagueTier, toTier, outcome, gems },
-  };
 }
 
 export const useGame = create<GameState & Actions>()(
@@ -375,14 +352,22 @@ export const useGame = create<GameState & Actions>()(
       setTheme: (theme) => set({ theme }),
       setSound: (sound) => set({ sound }),
       dismissCelebration: (id) => set((s) => ({ celebrations: s.celebrations.filter((c) => c.id !== id) })),
-      dismissLeagueResult: () => set({ leagueResult: null }),
+      setFriendCount: (n) =>
+        set((s) => {
+          if (n === s.friendCount) return {};
+          const earned = newBadges({ ...s, friendCount: n });
+          return {
+            friendCount: n,
+            badges: { ...s.badges, ...Object.fromEntries(earned.map((b) => [b.id, Date.now()])) },
+            celebrations: [...s.celebrations, ...earned.map((b) => ({ id: celebrationId++, type: 'badge' as const, badgeId: b.id }))],
+          };
+        }),
       acknowledgeLostStreak: () => set({ lostStreak: 0 }),
 
       reconcile: (now = new Date()) => {
         const s = get();
         const today = dayKey(now);
-        const patch = { ...settleStreak(s, today) };
-        Object.assign(patch, settleLeague({ ...s, ...patch }, today));
+        const patch = settleStreak(s, today);
         if (Object.keys(patch).length) set(patch);
       },
 
@@ -390,12 +375,10 @@ export const useGame = create<GameState & Actions>()(
     }),
     {
       name: 'belto-progress',
-      version: 1,
-      partialize: (s) => {
-        const { celebrations: _c, ...rest } = s;
-        void _c;
-        return Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v !== 'function')) as Partial<GameState>;
-      },
+      version: 2,
+      partialize: (s) => snapshot(s),
+      // v1 had a simulated weekly league; friends replaced it in v2.
+      migrate: (persisted) => withoutLegacyKeys(persisted as Record<string, unknown>) as unknown as GameState,
     },
   ),
 );

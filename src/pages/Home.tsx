@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { AudioLines, Check, Flame, Gem, Map, Pencil, Play, RefreshCw, Snowflake, Sunrise, Target, Timer, X } from 'lucide-react';
+import { AudioLines, Check, Flame, Gem, Map, Pencil, Play, RefreshCw, Snowflake, Sunrise, Target, Timer, Users, X } from 'lucide-react';
 import { midiToName, octavesBetween } from '../audio/notes';
 import { sfx } from '../audio/synth';
 import { Mascot } from '../components/Mascot';
@@ -9,7 +9,6 @@ import { Piano } from '../components/Piano';
 import { ICONS } from '../components/icons';
 import { findLesson } from '../content/curriculum';
 import { dayKey, timeOfDayGreeting, weekDays, weekStart } from '../game/dates';
-import { TIERS } from '../game/league';
 import { questsFor } from '../game/quests';
 import { dailyXpGoal, effectiveRange, nextLessonId, todayActivity, useGame, voiceTypeOf } from '../game/store';
 import { GOALS, PACES } from './Onboarding';
@@ -38,8 +37,6 @@ export function Home() {
 
   return (
     <div className="home">
-      {s.leagueResult && <LeagueResultModal />}
-
       <section className="home__greet">
         <Mascot mood={s.lostStreak ? 'encourage' : s.lastActive === today ? 'cheer' : 'idle'} size={120} />
         <p className="home__bubble">
@@ -130,9 +127,10 @@ export function Home() {
           <p className="home__goal">
             <Timer size={20} className="home__goal-icon home__goal-icon--teal" /> {s.dailyMinutes} minutes a day
           </p>
-          <p className="home__goal">
-            <span className="home__tier" style={{ background: TIERS[s.leagueTier].color }} /> {TIERS[s.leagueTier].name} league
-          </p>
+          <Link to="/friends" className="home__goal">
+            <Users size={20} className="home__goal-icon home__goal-icon--gold" />{' '}
+            {s.friendCount ? `${s.friendCount} ${s.friendCount === 1 ? 'friend' : 'friends'} singing with you` : 'Add friends to sing with'}
+          </Link>
         </section>
       </div>
 
@@ -303,38 +301,3 @@ function GoalsEditor({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
-function LeagueResultModal() {
-  const r = useGame((s) => s.leagueResult)!;
-  const dismiss = useGame((s) => s.dismissLeagueResult);
-  const tier = TIERS[r.toTier];
-  const title = r.outcome === 'promoted' ? `Promoted to ${tier.name}!` : r.outcome === 'demoted' ? `Back to ${tier.name} league` : `Staying in ${tier.name}`;
-  const blurb =
-    r.outcome === 'promoted'
-      ? `You finished #${r.rank} last week. Look at you go!`
-      : r.outcome === 'demoted'
-        ? `You finished #${r.rank}. A fresh week, a fresh start. You've got this.`
-        : `You finished #${r.rank} last week. Solid! Push for the top 5 this week.`;
-  useEffect(() => {
-    sfx(r.outcome === 'promoted' ? 'levelup' : 'pop');
-  }, [r.outcome]);
-  return (
-    <div className="modal" role="dialog" aria-modal="true" aria-label="League results">
-      <div className="modal__card card pop-in" style={{ textAlign: 'center', alignItems: 'center' }}>
-        <Mascot mood={r.outcome === 'demoted' ? 'encourage' : 'cheer'} size={130} />
-        <p className="eyebrow">Last week's league</p>
-        <h2 className="h2">{title}</h2>
-        <p className="dim">{blurb}</p>
-        {r.gems > 0 && (
-          <p className="chip">
-            <Gem size={14} /> +{r.gems} podium gems
-          </p>
-        )}
-        <button className="btn btn--primary btn--block" onClick={dismiss}>
-          Let's go
-        </button>
-      </div>
-    </div>
-  );
-}
-

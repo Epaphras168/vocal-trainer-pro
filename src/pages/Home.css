@@ -344,9 +344,11 @@
   color: var(--teal);
 }
 
-.home__tier {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  transform: rotate(45deg) scale(0.8);
+.home__goal-icon--gold {
+  color: var(--gold);
 }
+
+a.home__goal:hover {
+  color: var(--accent);
+}
+

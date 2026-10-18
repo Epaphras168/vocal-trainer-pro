@@ -570,3 +570,31 @@ p {
   font-size: 0.9rem;
   border-radius: var(--r-pill);
 }
+
+/* Segmented control */
+.seg {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 2px solid var(--line);
+}
+
+.seg button {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.seg button[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}

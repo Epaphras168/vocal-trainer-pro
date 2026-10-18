@@ -10,7 +10,7 @@ export interface BadgeContext {
   rangeSemitones: number;
   unitsCompleted: number;
   gameBest: number;
-  promotions: number;
+  friends: number;
   warmups: number;
 }
 
@@ -19,7 +19,7 @@ export interface Badge {
   name: string;
   blurb: string;
   /** lucide icon name, see components/BadgeIcon. */
-  icon: 'Mic' | 'Star' | 'Flame' | 'Sparkles' | 'Trophy' | 'Music' | 'Mountain' | 'Crown' | 'Gamepad2' | 'Sunrise' | 'Medal' | 'Zap';
+  icon: 'Mic' | 'Star' | 'Flame' | 'Sparkles' | 'Trophy' | 'Music' | 'Mountain' | 'Crown' | 'Gamepad2' | 'Sunrise' | 'Medal' | 'Zap' | 'Users';
   color: 'accent' | 'gold' | 'teal' | 'pink' | 'violet';
   earned: (c: BadgeContext) => boolean;
 }
@@ -37,5 +37,6 @@ export const BADGES: Badge[] = [
   { id: 'xp-1000', name: 'Thousand club', blurb: 'Earned 1,000 XP.', icon: 'Trophy', color: 'gold', earned: (c) => c.xp >= 1000 },
   { id: 'game-5', name: 'Echo master', blurb: 'Reached level 5 in the pitch game.', icon: 'Gamepad2', color: 'pink', earned: (c) => c.gameBest >= 5 },
   { id: 'warmup-5', name: 'Early bird', blurb: 'Did the daily warm-up five times.', icon: 'Sunrise', color: 'accent', earned: (c) => c.warmups >= 5 },
-  { id: 'promoted', name: 'Moving up', blurb: 'Got promoted to a new league.', icon: 'Crown', color: 'gold', earned: (c) => c.promotions >= 1 },
+  { id: 'duet', name: 'Duet', blurb: 'Added your first friend.', icon: 'Users', color: 'teal', earned: (c) => c.friends >= 1 },
+  { id: 'choir', name: 'Choir', blurb: 'Five friends singing with you.', icon: 'Crown', color: 'gold', earned: (c) => c.friends >= 5 },
 ];

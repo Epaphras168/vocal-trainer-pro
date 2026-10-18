@@ -11,3 +11,5 @@ const storage: Storage = {
   },
 };
 Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true, writable: true });
+// zustand's persist middleware reads window.localStorage.
+if (typeof window === 'undefined') Object.defineProperty(globalThis, 'window', { value: globalThis, configurable: true });

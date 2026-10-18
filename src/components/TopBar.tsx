@@ -1,5 +1,5 @@
 import { NavLink, Link } from 'react-router-dom';
-import { Flame, Gem, House, Map, AudioLines, Trophy, UserRound } from 'lucide-react';
+import { Flame, Gem, House, Map, AudioLines, UserRound, Users } from 'lucide-react';
 import { useGame } from '../game/store';
 import { levelFromXp } from '../game/levels';
 import { dayKey } from '../game/dates';
@@ -10,7 +10,7 @@ export const NAV = [
   { to: '/home', label: 'Home', icon: House },
   { to: '/path', label: 'Path', icon: Map },
   { to: '/practice', label: 'Practice', icon: AudioLines },
-  { to: '/league', label: 'League', icon: Trophy },
+  { to: '/friends', label: 'Friends', icon: Users },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ];
 

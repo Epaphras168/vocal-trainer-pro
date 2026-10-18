@@ -25,7 +25,7 @@ export function daysBetween(a: DayKey, b: DayKey): number {
   return Math.round((parseDay(b).getTime() - parseDay(a).getTime()) / 86_400_000);
 }
 
-/** Leagues run Monday to Sunday. */
+/** Weeks (for weekly XP and friend rankings) run Monday to Sunday. */
 export function weekStart(key: DayKey): DayKey {
   const d = parseDay(key);
   const dow = (d.getDay() + 6) % 7; // Monday = 0
@@ -36,11 +36,6 @@ export function weekDays(start: DayKey): DayKey[] {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 
-/** Fraction of the league week elapsed at `now`, 0..1. */
-export function weekProgress(now: Date = new Date()): number {
-  const start = parseDay(weekStart(dayKey(now)));
-  return Math.min(1, Math.max(0, (now.getTime() - start.getTime()) / (7 * 86_400_000)));
-}
 
 export function timeOfDayGreeting(now: Date = new Date()): string {
   const h = now.getHours();

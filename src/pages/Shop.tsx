@@ -35,7 +35,7 @@ export function Shop() {
           <h1 className="shop__title">
             <Gem size={34} className="shop__gem" /> <span className="num">{gems}</span>
           </h1>
-          <p className="dim">Earn gems from lessons, quests, chests and the league podium.</p>
+          <p className="dim">Earn gems from lessons, daily quests, unit chests and perfect runs.</p>
         </div>
       </header>
       {flash && (

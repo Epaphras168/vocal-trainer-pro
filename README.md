@@ -2,7 +2,7 @@
 
 **Find your voice. Then belt it.** Belto is a game-like singing trainer in the spirit of Duolingo: short daily lessons, practice drills and games, all graded in real time against your actual singing through the microphone. Pip, a little robin with a microphone, is your coach.
 
-Everything runs in the browser. Pitch detection is fully client-side and no audio is ever recorded or uploaded. Progress is saved on the device (localStorage).
+Pitch detection runs entirely in the browser and no audio is ever recorded or uploaded. Progress is saved on the device first; signing in (optional) backs it up, syncs it across devices and lets you add friends.
 
 ## Quick start
 
@@ -10,6 +10,7 @@ Everything runs in the browser. Pitch detection is fully client-side and no audi
 npm install
 npm run dev        # http://localhost:5173
 npm test           # unit tests (vitest)
+npm run test:db    # database / security tests (needs a local Postgres, see below)
 npm run build      # typecheck + production build into dist/
 ```
 
@@ -24,8 +25,8 @@ Microphone access needs a secure context: `localhost` or an `https://` deploymen
 | **Path** | A winding game map of 8 units / 24 lessons with locked, current and completed stops plus a gem chest at the end of each unit. |
 | **Lesson player** | Teach cards with a demo pitched for your voice, then graded exercises: held notes, melodies, glides, breath work, ear-training quizzes and rhythm. Every lesson ends on an easy, confidence-building step. |
 | **Practice** | Daily 2-minute warm-up, Pitch Accuracy Test (scale vs. metronome, Precision % and Sustain %), Echo pitch game (levels, three hearts), Vocal Range Test (compared with famous singers), Ear Gym, and the Pitch Playground. |
-| **League** | Weekly leagues (Sparrow → Songbird) with promotion and demotion zones and podium gems. |
-| **Profile** | Streak calendar, XP chart, accuracy trend, range over time, badges, and settings (theme, sound, reset). |
+| **Friends** | Sign in with an email link or code, add friends by code or invite link, accept requests, and see each other's rank (this week or all time), level, streak, lessons, best accuracy and voice type. |
+| **Profile** | Streak calendar, XP chart, accuracy trend, range over time, badges, and settings (account, theme, sound, reset). |
 | **Shop** | Spend gems on streak freezes and accent colour themes. |
 
 There's also a no-signup `/try` page with the live pitch tracker.
@@ -48,13 +49,27 @@ All rewards go through one place, `useGame().recordActivity` in `src/game/store.
 
 - **XP**: a base amount for finishing, an accuracy bonus, and a perfect-run bonus at 90%+. Replays pay a bit less. The level curve is 60 XP to level 2, then +30 per level.
 - **Streaks**: counted on your local calendar. Missed days spend streak freezes automatically. If there aren't enough, the streak resets gently and Pip says so once.
-- **Gems**: from first lesson clears, perfect drills, quests, unit chests and the league podium. Spent on freezes and themes.
-- **Badges**: 13 achievements, checked after every activity.
+- **Gems**: from first lesson clears, perfect drills, quests and unit chests. Spent on freezes and themes.
+- **Badges**: 14 achievements, checked after every activity (including Duet and Choir for adding friends).
 - **Soft failure**: no hearts in lessons. You can retry any step for free and your best attempt counts. Only the optional Echo game uses hearts.
 
-### About the league
+## Accounts & friends
 
-Belto has no backend, so your weekly cohort is a deterministic set of 19 practice buddies generated from the week and tier, whose XP grows as the week goes on. `cohortFor()` in `src/game/league.ts` is the one function to swap for a server call to make leagues truly multiplayer.
+Without configuration Belto runs fully offline and the Friends tab says it isn't switched on. To enable accounts, cloud backup and friends:
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run `supabase/migrations/20261018000000_friends.sql` in the SQL editor (or `supabase db push` with the Supabase CLI).
+3. In **Authentication → URL configuration**, set the Site URL to where Belto is hosted, and add `<your-site>/friends` to the redirect URLs.
+4. In **Authentication → Emails → Magic Link**, include `{{ .Token }}` in the template so the email carries a 6-digit code as well as the link. People can then sign in on a phone even if the email arrives on a laptop.
+5. Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from **Project settings → API**. Set the same variables on your host (Vercel, Netlify...).
+
+How it works:
+
+- **Local-first sync** (`src/cloud/account.ts`): on sign-in the cloud copy is pulled and merged with this device's progress (`merge.ts`: lessons, badges, days of practice and activity are combined, nothing is lost), then every change is pushed a couple of seconds later. Signing out keeps progress on the device.
+- **What friends see** is a small public summary written by your app (`summary.ts`): name, level, XP, this week's XP, streak, lessons completed, best accuracy, voice type and the day you last sang. Your full progress blob stays private to you.
+- **Security** lives in the database. Row level security limits every table to its owner; friend codes are assigned by the database and can't be changed; adding, accepting, declining, unfriending and reading friends' progress all go through `security definer` functions that check who is calling. Pending requests only reveal a name. `supabase/tests/friends_test.sql` checks all of this (24 checks) against plain Postgres with a stub of Supabase's `auth` schema: `PGHOST=... PGUSER=... npm run test:db`.
+- Scores are reported by each player's own app, which is fine for friendly rankings between people who know each other, but not a cheat-proof public leaderboard.
+- For development without Supabase, set `VITE_CLOUD_MOCK=true`: a pretend server in localStorage with a few friends and a pending request. Any 6-digit code signs you in. It is never included in a build unless that flag is set.
 
 ## Design system
 
@@ -73,8 +88,10 @@ src/
   audio/       pitch engine, note math, synth, scoring (+ tests)
   content/     the curriculum (units, lessons, steps)
   exercises/   hold, melody, glide, breath, quiz, rhythm (+ tests)
-  game/        store, levels, streak dates, league, badges, quests (+ tests)
+  game/        store, levels, streak dates, badges, quests (+ tests)
+  cloud/       accounts, sync, merge, friend ranking, Supabase + mock backends (+ tests)
   components/  Pip, PitchRoll, TuningMeter, MicGate, Results, charts, shell
-  pages/       landing, onboarding, home, path, lesson player, practice/*, league, profile, shop
+  pages/       landing, onboarding, home, path, lesson player, practice/*, friends, sign-in, profile, shop
+supabase/      database migration and SQL tests
   styles/      tokens + global styles
 ```

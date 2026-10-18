@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, Gem, Lock, Monitor, Moon, Snowflake, Star, Sun, Trophy, Volume2, VolumeX, Zap } from 'lucide-react';
+import { Flame, Gem, Lock, LogIn, LogOut, Monitor, Moon, Snowflake, Star, Sun, Trophy, Volume2, VolumeX, Zap } from 'lucide-react';
 import { midiToName } from '../audio/notes';
 import { BADGES } from '../game/badges';
 import { addDays, dayKey, parseDay, weekStart } from '../game/dates';
 import { levelFromXp } from '../game/levels';
 import { useGame, voiceTypeOf, type ThemePref } from '../game/store';
+import { signOut, useAccount } from '../cloud/account';
 import { ALL_LESSONS } from '../content/curriculum';
 import { BarChart, LineChart, RangeChart } from '../components/charts';
 import { ICONS } from '../components/icons';
@@ -223,6 +224,7 @@ function Settings() {
   const setSound = useGame((s) => s.setSound);
   const reset = useGame((s) => s.resetAll);
   const [confirm, setConfirm] = useState(false);
+  const account = useAccount((s) => s.status);
   const themes: { id: ThemePref; label: string; icon: typeof Sun }[] = [
     { id: 'system', label: 'Auto', icon: Monitor },
     { id: 'light', label: 'Light', icon: Sun },
@@ -231,6 +233,7 @@ function Settings() {
   return (
     <section className="card profile__card profile__wide settings">
       <h2 className="h3">Settings</h2>
+      <AccountRow />
       <div className="settings__row">
         <span>Appearance</span>
         <div className="seg" role="radiogroup" aria-label="Appearance">
@@ -276,7 +279,32 @@ function Settings() {
           </button>
         )}
       </div>
-      <p className="mute profile__note">Your progress is saved on this device only. Pitch detection runs entirely in your browser; no audio ever leaves it.</p>
+      <p className="mute profile__note">
+        Progress is saved on this device{account === 'signed-in' ? ' and backed up to your account' : ''}. Pitch detection runs entirely in your browser; no audio ever leaves it.
+      </p>
     </section>
+  );
+}
+
+function AccountRow() {
+  const status = useAccount((s) => s.status);
+  const email = useAccount((s) => s.user?.email);
+  if (status === 'disabled') return null;
+  return (
+    <div className="settings__row">
+      <span>
+        Account
+        <span className="mute settings__sub">{status === 'signed-in' ? `Signed in as ${email ?? 'you'}` : 'Back up progress and add friends'}</span>
+      </span>
+      {status === 'signed-in' ? (
+        <button className="btn btn--sm btn--ghost" onClick={() => void signOut()}>
+          <LogOut size={16} /> Sign out
+        </button>
+      ) : (
+        <Link to="/friends" className="btn btn--sm btn--primary">
+          <LogIn size={16} /> Sign in
+        </Link>
+      )}
+    </div>
   );
 }

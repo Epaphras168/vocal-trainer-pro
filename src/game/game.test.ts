@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { levelFromXp, xpFor } from './levels';
-import { outcomeFor, standings, cohortFor } from './league';
 import { questsFor } from './quests';
-import { useGame, weekXp } from './store';
-import { weekStart } from './dates';
+import { useGame } from './store';
 
 describe('levels', () => {
   it('needs 60 XP for level 2', () => {
@@ -15,22 +13,6 @@ describe('levels', () => {
   it('pays a perfect run a bonus', () => {
     expect(xpFor('lesson', 95).total).toBeGreaterThan(xpFor('lesson', 70).total + 5);
     expect(xpFor('lesson', 0).total).toBe(15);
-  });
-});
-
-describe('league', () => {
-  it('is deterministic per week and tier', () => {
-    expect(cohortFor('2026-10-12', 0)).toEqual(cohortFor('2026-10-12', 0));
-    expect(cohortFor('2026-10-12', 0)).not.toEqual(cohortFor('2026-10-19', 0));
-  });
-
-  it('ranks the singer among 20', () => {
-    const table = standings('2026-10-12', 0, 'Epa', 99999, 0.5);
-    expect(table).toHaveLength(20);
-    expect(table[0].isYou).toBe(true);
-    expect(outcomeFor(1, 0, 100)).toBe('promoted');
-    expect(outcomeFor(18, 0, 0)).toBe('stayed');
-    expect(outcomeFor(18, 2, 5)).toBe('demoted');
   });
 });
 
@@ -82,16 +64,23 @@ describe('streaks', () => {
     expect(sing().streakAfter).toBe(1);
   });
 
-  it('settles the league when a new week starts', () => {
-    vi.setSystemTime(new Date(2026, 9, 12, 10));
-    useGame.setState({ name: 'Epa', leagueWeek: weekStart('2026-10-12') });
-    for (let i = 0; i < 40; i++) sing();
-    expect(weekXp(useGame.getState().xpByDay, '2026-10-12')).toBeGreaterThan(400);
-    vi.setSystemTime(new Date(2026, 9, 20, 10));
-    useGame.getState().reconcile();
-    const s = useGame.getState();
-    expect(s.leagueWeek).toBe('2026-10-19');
-    expect(s.leagueResult?.outcome).toBe('promoted');
-    expect(s.leagueTier).toBe(1);
+  it('awards friend badges once', () => {
+    useGame.getState().setFriendCount(1);
+    expect(useGame.getState().badges.duet).toBeTruthy();
+    expect(useGame.getState().badges.choir).toBeUndefined();
+    useGame.getState().setFriendCount(5);
+    expect(useGame.getState().badges.choir).toBeTruthy();
+  });
+});
+
+describe('storage migration', () => {
+  it('drops the old league fields from v1 saves', async () => {
+    const v1 = { state: { name: 'Epa', onboarded: true, xp: 77, leagueWeek: '2026-10-12', leagueTier: 2, leagueResult: null, promotions: 1 }, version: 1 };
+    localStorage.setItem('belto-progress', JSON.stringify(v1));
+    await useGame.persist.rehydrate();
+    const s = useGame.getState() as unknown as Record<string, unknown>;
+    expect(s.xp).toBe(77);
+    expect(s.leagueTier).toBeUndefined();
+    expect(s.promotions).toBeUndefined();
   });
 });

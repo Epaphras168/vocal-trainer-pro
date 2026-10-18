@@ -12,6 +12,7 @@ import { RangeFinder } from '../components/RangeFinder';
 import { TuningMeter } from '../components/TuningMeter';
 import { celebrate } from '../components/confetti';
 import { useGame, type GoalId } from '../game/store';
+import { hasInvite } from '../cloud/account';
 import './Onboarding.css';
 
 export const GOALS: { id: GoalId; label: string; blurb: string; icon: typeof Heart }[] = [
@@ -64,7 +65,8 @@ export function Onboarding() {
   const finish = () => {
     complete({ name: name || 'Singer', goal: goal ?? 'fun', dailyMinutes: pace ?? 5 });
     if (range) setRange(range.low, range.high);
-    nav('/home', { replace: true });
+    // Arrived through a friend's invite link? Take them to it.
+    nav(hasInvite() ? '/friends' : '/home', { replace: true });
   };
 
   const mood: Mood = step === 'hello' ? 'cheer' : step === 'mic' ? 'listen' : 'idle';

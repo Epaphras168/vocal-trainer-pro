@@ -130,7 +130,7 @@ export function FreeSing({ guest = false }: { guest?: boolean }) {
         <div className="card freesing__cta">
           <div>
             <h3>Like what you hear?</h3>
-            <p className="dim">Get a full singing path pitched to your voice, with streaks, XP and a weekly league.</p>
+            <p className="dim">Get a full singing path pitched to your voice, with streaks, XP and friends to sing with.</p>
           </div>
           <Link to="/onboarding" className="btn btn--primary">
             Start my path
