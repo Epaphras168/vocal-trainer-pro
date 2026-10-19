@@ -100,8 +100,10 @@ describe('scoring', () => {
 
   it('lets a short pause bridge a breath only when the gap allows it', () => {
     const s = [...sing(0, 3, () => null, 0.01), ...sing(3, 3.5, () => null, 0), ...sing(3.5, 7, () => null, 0.01)];
-    expect(scoreBreath(s, 7, 0.005).seconds).toBeLessThan(3.2);
-    expect(scoreBreath(s, 7, 0.005, 0.9).seconds).toBeGreaterThan(3.4);
+    // Strict: the pause splits it, so only the longer half (3.5 s) counts.
+    expect(scoreBreath(s, 7, 0.005).seconds).toBeLessThan(4);
+    // Forgiving: the 0.5 s pause is bridged and it counts as one 7 s breath.
+    expect(scoreBreath(s, 7, 0.005, 0.9).seconds).toBeGreaterThan(6.5);
   });
 
   it('scores taps by timing', () => {
