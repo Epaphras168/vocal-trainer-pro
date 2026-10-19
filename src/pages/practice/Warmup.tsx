@@ -13,7 +13,7 @@ import { DrillFrame } from './DrillFrame';
 // flows into the next so it feels like a real warm-up.
 
 const ROUTINE: GradedStep[] = [
-  { kind: 'breath', title: 'Wake up the breath', prompt: "Low breath in, then a long, even 'sssss'.", goal: 8, sound: 'hiss' },
+  { kind: 'breath', title: 'Wake up the breath', prompt: "Low breath in, then a long, soft 'sssss'.", goal: 8, sound: 'hiss' },
   { kind: 'glide', title: 'Siren up', prompt: "Lip trill or 'ooo', sliding up.", from: -3, to: 7, seconds: 4 },
   { kind: 'glide', title: 'Siren down', prompt: 'And float back down.', from: 7, to: -3, seconds: 4 },
   { kind: 'hold', title: 'Easy hum', prompt: "Lips closed, a gentle 'mmm' on the line.", offset: 0, seconds: 3, tolerance: 70 },

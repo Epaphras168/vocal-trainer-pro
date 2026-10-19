@@ -83,6 +83,27 @@ describe('scoring', () => {
     expect(s.precision).toBe(50);
   });
 
+  it('judges breath evenness in dB, so a natural soft wobble is fine', () => {
+    const level = (f: (t: number) => number): Sample[] => sing(0, 6, () => null, 0).map((x) => ({ ...x, rms: f(x.t) }));
+    const steady = scoreBreath(level(() => 0.004), 4, 1e-6);
+    const natural = scoreBreath(level((t) => 0.004 * 10 ** ((2.5 * Math.sin(t * 2)) / 20)), 4, 1e-6);
+    const erratic = scoreBreath(level((t) => 0.004 * 10 ** ((14 * Math.sin(t * 6)) / 20)), 4, 1e-6);
+    expect(steady.sustain).toBe(100);
+    expect(natural.sustain).toBeGreaterThanOrEqual(95);
+    expect(erratic.sustain).toBeLessThan(40);
+  });
+
+  it('counts quiet breath the same as loud breath', () => {
+    const at = (rms: number) => scoreBreath(sing(0, 5, () => null, rms), 5, 1e-6);
+    expect(at(0.0015).accuracy).toBe(at(0.2).accuracy);
+  });
+
+  it('lets a short pause bridge a breath only when the gap allows it', () => {
+    const s = [...sing(0, 3, () => null, 0.01), ...sing(3, 3.5, () => null, 0), ...sing(3.5, 7, () => null, 0.01)];
+    expect(scoreBreath(s, 7, 0.005).seconds).toBeLessThan(3.2);
+    expect(scoreBreath(s, 7, 0.005, 0.9).seconds).toBeGreaterThan(3.4);
+  });
+
   it('scores taps by timing', () => {
     const beats = [0, 1, 2, 3];
     expect(scoreTaps([0.01, 1.02, 1.99, 3.0], beats).accuracy).toBe(100);

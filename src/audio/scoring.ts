@@ -126,8 +126,13 @@ export function scoreGlide(samples: Sample[], low: number, high: number): Score 
   return { precision: Math.round(coverage * 100), sustain: Math.round(smoothness * 100), accuracy: Math.round((coverage * 0.7 + smoothness * 0.3) * 100), notes: [note] };
 }
 
-/** Breath: the longest continuous, even stretch of sound against a goal length. */
-export function scoreBreath(samples: Sample[], goalSeconds: number, minRms = 0.01): Score & { seconds: number } {
+/**
+ * Breath: the longest continuous, even stretch of sound against a goal length.
+ * `rms` is any linear loudness; `gap` is how long a quiet dip can last before
+ * the breath counts as over. Evenness is judged in dB, the way ears hear it:
+ * a natural soft hiss wobbles a few dB and that's fine.
+ */
+export function scoreBreath(samples: Sample[], goalSeconds: number, minRms = 0.01, gap = 0.15): Score & { seconds: number } {
   let best: Sample[] = [];
   let run: Sample[] = [];
   let gapStart: number | null = null;
@@ -137,8 +142,8 @@ export function scoreBreath(samples: Sample[], goalSeconds: number, minRms = 0.0
       gapStart = null;
     } else {
       gapStart ??= s.t;
-      // A quick 150 ms dip doesn't end the breath.
-      if (s.t - gapStart > 0.15) {
+      // A short dip doesn't end the breath.
+      if (s.t - gapStart > gap) {
         if (run.length > best.length) best = run;
         run = [];
       }
@@ -146,9 +151,9 @@ export function scoreBreath(samples: Sample[], goalSeconds: number, minRms = 0.0
   }
   if (run.length > best.length) best = run;
   const seconds = best.length > 1 ? best[best.length - 1].t - best[0].t : 0;
-  const levels = best.map((s) => s.rms);
-  const mean = levels.reduce((a, b) => a + b, 0) / (levels.length || 1);
-  const evenness = levels.length > 4 ? clamp01(1 - stddev(levels) / (mean || 1) / 0.8) : 0;
+  const levelsDb = best.map((s) => 20 * Math.log10(Math.max(s.rms, 1e-6)));
+  // Up to 3 dB of wobble is perfect; 12 dB or more is not steady at all.
+  const evenness = levelsDb.length > 4 ? clamp01(1 - (stddev(levelsDb) - 3) / 9) : 0;
   const length = clamp01(seconds / goalSeconds);
   return {
     seconds,

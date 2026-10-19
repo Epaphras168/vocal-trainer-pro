@@ -15,6 +15,12 @@ export interface PitchFrame {
   clarity: number;
   /** Input loudness, 0..1 RMS. */
   rms: number;
+  /**
+   * Energy in the 3-9 kHz band in dB. A soft "sss" lives up here and is very
+   * quiet overall, so this tells a gentle hiss apart from room noise far better
+   * than overall loudness does.
+   */
+  hissDb: number;
 }
 
 export type MicState = 'idle' | 'requesting' | 'running' | 'denied' | 'unsupported' | 'error';
@@ -42,7 +48,7 @@ function median(values: number[]): number {
 
 class PitchEngine {
   state: MicState = 'idle';
-  latest: PitchFrame = { t: 0, midi: null, hz: null, clarity: 0, rms: 0 };
+  latest: PitchFrame = { t: 0, midi: null, hz: null, clarity: 0, rms: 0, hissDb: -140 };
   errorMessage = '';
 
   private ctx: AudioContext | null = null;
@@ -50,6 +56,7 @@ class PitchEngine {
   private analyser: AnalyserNode | null = null;
   private detector = PitchDetector.forFloat32Array(FFT_SIZE);
   private buffer = new Float32Array(FFT_SIZE);
+  private spectrum = new Float32Array(FFT_SIZE / 2);
   private raf = 0;
   private frameListeners = new Set<FrameListener>();
   private stateListeners = new Set<StateListener>();
@@ -178,12 +185,24 @@ class PitchEngine {
     }
 
     const midi = this.track(hz, t);
-    const frame: PitchFrame = { t, midi, hz, clarity, rms };
+    const frame: PitchFrame = { t, midi, hz, clarity, rms, hissDb: this.hissLevel() };
     this.latest = frame;
     this.history.push(frame);
     if (this.history.length > 180) this.history.splice(0, this.history.length - 180);
     this.frameListeners.forEach((fn) => fn(frame));
   };
+
+  /** Mean power between 3 and 9 kHz, in dB. */
+  private hissLevel(): number {
+    if (!this.analyser || !this.ctx) return -140;
+    this.analyser.getFloatFrequencyData(this.spectrum);
+    const binHz = this.ctx.sampleRate / FFT_SIZE;
+    const from = Math.ceil(3000 / binHz);
+    const to = Math.min(this.spectrum.length - 1, Math.floor(9000 / binHz));
+    let power = 0;
+    for (let i = from; i <= to; i++) power += Math.pow(10, Math.max(this.spectrum[i], -140) / 10);
+    return 10 * Math.log10(power / Math.max(1, to - from + 1) + 1e-14);
+  }
 
   /** Median filter + octave-jump rejection + light smoothing, with a short dropout hold. */
   private track(hz: number | null, t: number): number | null {

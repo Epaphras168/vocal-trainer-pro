@@ -83,7 +83,7 @@ export const UNITS: Unit[] = [
           tip: 'Put a hand on your stomach. It should push out when you breathe in.',
           demo: { type: 'note', offset: 0, dur: 2.5, voice: true },
         },
-        { kind: 'breath', title: 'The slow leak', prompt: "Big belly breath, then a long, even 'sssss'. Like a slow tyre leak.", goal: 8, sound: 'hiss' },
+        { kind: 'breath', title: 'The slow leak', prompt: "Big belly breath, then a long, soft 'sssss'. Like a slow tyre leak.", goal: 8, sound: 'hiss' },
         { kind: 'hold', title: 'Add a note', prompt: "Same steady air, now on an 'ahh'. Ride the gold line.", offset: 0, seconds: 3, tolerance: 70, easy: true },
       ]),
       lesson('breath-2', 'The long hiss', 4, [
@@ -93,7 +93,7 @@ export const UNITS: Unit[] = [
           body: "The longer you can let air out evenly, the longer and steadier your notes get. Today we stretch that tank.",
           tip: 'Keep your shoulders relaxed. They should not rise when you breathe in.',
         },
-        { kind: 'breath', title: 'Longer leak', prompt: "Breathe low, then hiss 'sssss' as evenly as you can.", goal: 12, sound: 'hiss' },
+        { kind: 'breath', title: 'Longer leak', prompt: "Breathe low, then a soft, even 'sssss'. No need to push.", goal: 12, sound: 'hiss' },
         { kind: 'breath', title: 'Humming bird', prompt: "Now a gentle hum, 'mmmm', lips closed. Keep it even.", goal: 10, sound: 'hum' },
         { kind: 'hold', title: 'Easy ahh', prompt: "Open up into a relaxed 'ahh' on the line.", offset: 0, seconds: 3, tolerance: 70, easy: true },
       ]),
