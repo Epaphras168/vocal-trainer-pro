@@ -13,6 +13,7 @@ import { Profile } from './pages/Profile';
 import { Friends } from './pages/Friends';
 import { AddInvite, SignIn } from './pages/SignIn';
 import { initCloud } from './cloud/account';
+import { Privacy, Terms } from './pages/Legal';
 import { Shop } from './pages/Shop';
 import { PracticeHub } from './pages/practice/PracticeHub';
 import { RangeTest } from './pages/practice/RangeTest';
@@ -59,6 +60,8 @@ export function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/signin" element={<main className="focus"><SignIn /></main>} />
         <Route path="/add/:code" element={<AddInvite />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/try" element={<main className="focus"><FreeSing guest /></main>} />
         <Route element={<AppShell />}>
           <Route path="/home" element={<Home />} />

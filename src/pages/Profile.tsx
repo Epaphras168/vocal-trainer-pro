@@ -257,6 +257,17 @@ function Settings() {
         </Link>
       </div>
       <div className="settings__row">
+        <span>Legal</span>
+        <span className="row">
+          <Link to="/privacy" className="btn btn--sm btn--ghost">
+            Privacy
+          </Link>
+          <Link to="/terms" className="btn btn--sm btn--ghost">
+            Terms
+          </Link>
+        </span>
+      </div>
+      <div className="settings__row">
         <span>Reset all progress</span>
         {confirm ? (
           <span className="row">

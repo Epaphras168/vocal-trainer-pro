@@ -25,7 +25,7 @@ Microphone access needs a secure context: `localhost` or an `https://` deploymen
 | **Path** | A winding game map of 8 units / 24 lessons with locked, current and completed stops plus a gem chest at the end of each unit. |
 | **Lesson player** | Teach cards with a demo pitched for your voice, then graded exercises: held notes, melodies, glides, breath work, ear-training quizzes and rhythm. Every lesson ends on an easy, confidence-building step. |
 | **Practice** | Daily 2-minute warm-up, Pitch Accuracy Test (scale vs. metronome, Precision % and Sustain %), Echo pitch game (levels, three hearts), Vocal Range Test (compared with famous singers), Ear Gym, and the Pitch Playground. |
-| **Friends** | Sign in with Google or email and password, add friends by code or invite link, accept requests, and see each other's rank (this week or all time), level, streak, lessons, best accuracy and voice type. |
+| **Friends** | Sign in with email and password (Google optional), add friends by code or invite link, accept requests, and see each other's rank (this week or all time), level, streak, lessons, best accuracy and voice type. |
 | **Profile** | Streak calendar, XP chart, accuracy trend, range over time, badges, and settings (account, theme, sound, reset). |
 | **Shop** | Spend gems on streak freezes and accent colour themes. |
 
@@ -60,9 +60,10 @@ Without configuration Belto runs fully offline and the Friends tab says it isn't
 1. Create a project at [supabase.com](https://supabase.com).
 2. Run `supabase/migrations/20261018000000_friends.sql` in the SQL editor (or `supabase db push` with the Supabase CLI).
 3. **Email sign-in**: in **Authentication → Sign In / Providers → Email**, it's on by default. Since Belto stores nothing sensitive, you can turn off **Confirm email** so new accounts can sign in straight away; if you leave it on, Belto tells people to check their inbox first.
-4. **Google sign-in**: create an OAuth client (type *Web application*) in the [Google Cloud console](https://console.cloud.google.com/apis/credentials), add `https://<your-project>.supabase.co/auth/v1/callback` as an authorised redirect URI, then paste the client ID and secret into **Authentication → Sign In / Providers → Google** and enable it.
-5. In **Authentication → URL configuration**, set the Site URL to where Belto is hosted and add `<your-site>/**` to the redirect URLs (Google sign-in, email confirmation and password-reset links come back to the app).
-6. Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from **Project settings → API**. Set the same variables on your host (Vercel, Netlify...).
+4. In **Authentication → URL configuration**, set the Site URL to where Belto is hosted and add `<your-site>/**` to the redirect URLs (email confirmation and password-reset links come back to the app).
+5. Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from **Project settings → API**, plus `VITE_CONTACT_EMAIL` (shown on the Privacy and Terms pages; it's how people ask for account deletion). Set the same variables on your host (Vercel, Netlify...).
+
+**Google sign-in is optional and off by default.** Google only lets an app be used by the public once it's *published to production*, which requires a homepage, privacy policy and terms of service on a domain you own and have verified (a `*.vercel.app` address generally can't be verified). Belto ships both pages (`/privacy`, `/terms`), so once you have a custom domain you can: create an OAuth client in the [Google Cloud console](https://console.cloud.google.com/apis/credentials) with `https://<your-project>.supabase.co/auth/v1/callback` as an authorised redirect URI, fill in the consent screen with your domain and the `/privacy` and `/terms` links (don't add a logo; that triggers extra review), publish the app, paste the client ID and secret into **Authentication → Sign In / Providers → Google**, and set `VITE_GOOGLE_SIGNIN=true`. Belto only requests the basic profile and email, so no sensitive-scope review is needed.
 
 How it works:
 
@@ -70,7 +71,7 @@ How it works:
 - **What friends see** is a small public summary written by your app (`summary.ts`): name, level, XP, this week's XP, streak, lessons completed, best accuracy, voice type and the day you last sang. Your full progress blob stays private to you.
 - **Security** lives in the database. Row level security limits every table to its owner; friend codes are assigned by the database and can't be changed; adding, accepting, declining, unfriending and reading friends' progress all go through `security definer` functions that check who is calling. Pending requests only reveal a name. `supabase/tests/friends_test.sql` checks all of this (24 checks) against plain Postgres with a stub of Supabase's `auth` schema: `PGHOST=... PGUSER=... npm run test:db`.
 - Scores are reported by each player's own app, which is fine for friendly rankings between people who know each other, but not a cheat-proof public leaderboard.
-- For development without Supabase, set `VITE_CLOUD_MOCK=true`: a pretend server in localStorage with a few friends and a pending request. "Continue with Google" signs in instantly, as does any email with a 6+ character password. It is never included in a build unless that flag is set.
+- For development without Supabase, set `VITE_CLOUD_MOCK=true`: a pretend server in localStorage with a few friends and a pending request. Any email with a 6+ character password signs in (and "Continue with Google" works instantly when `VITE_GOOGLE_SIGNIN=true`). It is never included in a build unless that flag is set.
 
 ## Design system
 

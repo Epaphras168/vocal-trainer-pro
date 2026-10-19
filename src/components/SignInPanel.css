@@ -76,3 +76,14 @@
   color: var(--text);
   font-weight: 700;
 }
+
+.signin__agree {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.signin__agree a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -104,7 +104,13 @@ export function Landing() {
         </article>
       </section>
 
-      <footer className="landing__foot mute">Your voice never leaves your device. Pitch detection runs entirely in your browser.</footer>
+      <footer className="landing__foot mute">
+        <p>Your voice never leaves your device. Pitch detection runs entirely in your browser.</p>
+        <p className="landing__legal">
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+        </p>
+      </footer>
     </div>
   );
 }

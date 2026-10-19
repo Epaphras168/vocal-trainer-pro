@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { cloud } from '../cloud/account';
 import { sfx } from '../audio/synth';
 import './SignInPanel.css';
 
-// Sign in with Google, or with an email and password.
+// Sign in with an email and password. "Continue with Google" appears only
+// when VITE_GOOGLE_SIGNIN=true (it needs a verified Google OAuth app).
+const GOOGLE_ON = import.meta.env.VITE_GOOGLE_SIGNIN === 'true';
 
 type Mode = 'signin' | 'signup' | 'forgot';
 
@@ -65,7 +68,7 @@ export function SignInPanel({ title = 'Sign in', blurb }: { title?: string; blur
       <h2 className="h2">{mode === 'signup' ? 'Create your account' : mode === 'forgot' ? 'Reset your password' : title}</h2>
       {blurb && mode !== 'forgot' && <p className="dim">{blurb}</p>}
 
-      {mode !== 'forgot' && (
+      {mode !== 'forgot' && GOOGLE_ON && (
         <>
           <button className="btn btn--lg btn--block signin__google" onClick={google} disabled={busy}>
             <GoogleMark /> Continue with Google
@@ -133,6 +136,20 @@ export function SignInPanel({ title = 'Sign in', blurb }: { title?: string; blur
       {error && (
         <p className="signin__error" role="alert">
           {error}
+        </p>
+      )}
+
+      {mode === 'signup' && (
+        <p className="signin__agree mute">
+          By creating an account you agree to the{' '}
+          <Link to="/terms" target="_blank" rel="noreferrer">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link to="/privacy" target="_blank" rel="noreferrer">
+            Privacy Policy
+          </Link>
+          .
         </p>
       )}
 
