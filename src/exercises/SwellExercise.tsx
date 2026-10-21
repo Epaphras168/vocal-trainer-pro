@@ -116,7 +116,7 @@ export function SwellExercise({ step, range, onComplete }: ExerciseProps<SwellSt
       }
       side={
         <>
-          <CoachCard mood={mood} message={message} coachInput={phase === 'sing'}>
+          <CoachCard mood={mood} message={message} coachInput={phase === 'sing'} ignoreHints={['quiet']}>
             <TuningMeter target={target} tolerance={TOL} />
           </CoachCard>
           <div className="swell card card--tight" aria-label="Loudness shape">

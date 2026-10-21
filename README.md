@@ -22,8 +22,8 @@ Microphone access needs a secure context: `localhost` or an `https://` deploymen
 | --- | --- |
 | **Onboarding** | Name, why you sing, daily time, a friendly mic explainer *before* the browser prompt, a mic check, a vocal range test, then your voice type revealed. |
 | **Home** | Greeting from Pip, your voice and range on a keyboard, "up next" lesson, daily XP goal ring, this week's streak strip, daily quests, goals. |
-| **Path** | A winding game map of 8 units / 24 lessons with locked, current and completed stops plus a gem chest at the end of each unit. |
-| **Lesson player** | Teach cards with a demo pitched for your voice, then graded exercises: held notes, melodies, glides, breath work, ear-training quizzes and rhythm. Every lesson ends on an easy, confidence-building step. |
+| **Path** | A winding game map of 15 units / 79 lessons with locked, current and completed stops plus a gem chest at the end of each unit. |
+| **Lesson player** | Teach cards with a demo pitched for your voice, then graded exercises: held notes, melodies, glides, breath work, ear-training quizzes, rhythm, loudness swells, harmony parts and free ad-libbing in a key. Every lesson ends on an easy, confidence-building step. |
 | **Practice** | Daily 2-minute warm-up, Pitch Accuracy Test (scale vs. metronome, Precision % and Sustain %), Echo pitch game (levels, three hearts), Vocal Range Test (compared with famous singers), Ear Gym, and the Pitch Playground. |
 | **Friends** | Sign in with email and password (Google optional), add friends by code or invite link, accept requests, and see each other's rank (this week or all time), level, streak, lessons, best accuracy and voice type. |
 | **Profile** | Streak calendar, XP chart, accuracy trend, range over time, badges, and settings (account, theme, sound, reset). |
@@ -41,7 +41,7 @@ There's also a no-signup `/try` page with the live pitch tracker.
 6. While Belto plays a reference note the engine ignores input (plus a short echo tail), so the speaker is never mistaken for the singer. Metronome clicks and in-exercise sound effects sit above the detector's range for the same reason.
 7. The engine also produces coaching hints ("sing a bit louder", "it's noisy around you", "hold it steadier"), which Pip speaks during exercises.
 
-Scoring (`src/audio/scoring.ts`) is pure and unit-tested. **Precision** is how close each frame is to the target (within 15 cents is perfect, 100 cents earns nothing). **Sustain** is how continuously and steadily each note is held; natural vibrato isn't penalised. Glides are scored on how much of the slide you cover and how smoothly, breath on length and evenness, and rhythm on tap or onset timing.
+Scoring (`src/audio/scoring.ts`) is pure and unit-tested. **Precision** is how close each frame is to the target (within 15 cents is perfect, 100 cents earns nothing). **Sustain** is how continuously and steadily each note is held; natural vibrato isn't penalised. Glides are scored on how much of the slide you cover and how smoothly, breath on length and evenness, and rhythm on tap or onset timing. Swells are scored on a steady pitch plus a rise-and-fall in volume measured against your own start level; ad-libs on staying in the key, using several notes and moving between them. See [docs/CURRICULUM.md](docs/CURRICULUM.md) for what the microphone can and can't judge, and the research behind each unit.
 
 ## Game layer
 
@@ -88,7 +88,7 @@ How it works:
 ```
 src/
   audio/       pitch engine, note math, synth, scoring (+ tests)
-  content/     the curriculum (units, lessons, steps)
+  content/     the curriculum (types, core units, expansion from the technique guide)
   exercises/   hold, melody, glide, breath, quiz, rhythm (+ tests)
   game/        store, levels, streak dates, badges, quests (+ tests)
   cloud/       accounts, sync, merge, friend ranking, Supabase + mock backends (+ tests)

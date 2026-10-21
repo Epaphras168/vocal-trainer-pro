@@ -45,6 +45,9 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
   const [current, setCurrent] = useState<number>(-1);
   const [attempt, setAttempt] = useState(0);
   const [phaseNote, setPhaseNote] = useState('Listen');
+  // What the roll draws while listening: just the tune, then tune and harmony.
+  const [listenTargets, setListenTargets] = useState<TargetNote[] | null>(null);
+  const heardLead = useRef(false);
   const rec = useRecorder();
   const run = useRef(0);
   // Phones get a shorter visible window so each note stays wide enough to read.
@@ -61,13 +64,22 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
     setOrigin(pitchEngine.now() + 0.06);
     const line = (ns: number[]) => ns.map((midi) => ({ midi, dur: step.beat - GAP, gap: GAP }));
     if (lead) {
-      // First the tune on its own, then both parts together.
-      setPhaseNote('The tune');
-      await playSequence(line(lead), 'piano');
-      if (!alive()) return;
-      await sleep(300);
+      const leadTargets = melodyTargets(lead, step.beat);
+      // First the tune on its own (once), then both parts together.
+      if (!heardLead.current) {
+        setPhaseNote('The tune');
+        setListenTargets(leadTargets);
+        setOrigin(pitchEngine.now() + 0.06);
+        await playSequence(line(lead), 'piano');
+        if (!alive()) return;
+        await sleep(300);
+        heardLead.current = true;
+      }
       setPhaseNote('Tune + harmony');
+      setListenTargets([...leadTargets, ...targets]);
+      setOrigin(pitchEngine.now() + 0.06);
       await playLines([{ notes: line(lead) }, { notes: line(notes), timbre: 'voice', vel: 0.3 }]);
+      setListenTargets(null);
     } else {
       await playSequence(line(notes), 'piano');
     }
@@ -138,7 +150,7 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
         <PitchRoll
           low={view.low}
           high={view.high}
-          targets={targets}
+          targets={phase === 'listen' && listenTargets ? listenTargets : targets}
           origin={origin}
           live={phase !== 'listen'}
           windowSec={narrow ? 1.5 : 3}

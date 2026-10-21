@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Mascot, type Mood } from '../components/Mascot';
-import { HINT_COPY } from '../audio/pitchEngine';
+import { HINT_COPY, type InputHint } from '../audio/pitchEngine';
 import { useInputHint } from '../hooks/useMic';
 import './Stage.css';
 
@@ -27,11 +27,14 @@ interface CoachProps {
   message: string;
   /** Listen for input-quality problems and let Pip coach them. */
   coachInput?: boolean;
+  /** Input problems that make no sense for this exercise (e.g. 'unsteady' while ad-libbing). */
+  ignoreHints?: InputHint[];
   children?: ReactNode;
 }
 
-export function CoachCard({ mood, message, coachInput = false, children }: CoachProps) {
-  const hint = useInputHint(coachInput);
+export function CoachCard({ mood, message, coachInput = false, ignoreHints = [], children }: CoachProps) {
+  const raw = useInputHint(coachInput);
+  const hint: InputHint = ignoreHints.includes(raw) ? 'ok' : raw;
   const text = coachInput && hint !== 'ok' ? HINT_COPY[hint] : message;
   const shownMood: Mood = coachInput && hint !== 'ok' ? 'encourage' : mood;
   return (

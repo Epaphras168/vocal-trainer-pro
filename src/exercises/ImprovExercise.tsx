@@ -138,7 +138,7 @@ export function ImprovExercise({ step, range, onComplete }: ExerciseProps<Improv
       }
       side={
         <>
-          <CoachCard mood={mood} message={message} coachInput={phase === 'sing'} />
+          <CoachCard mood={mood} message={message} coachInput={phase === 'sing'} ignoreHints={['unsteady']} />
           <div className="notes-strip" aria-label="Notes of the key">
             {degrees.map((m) => (
               <span key={m} data-state={visited.includes(((m % 12) + 12) % 12) ? 'hit' : ''}>
