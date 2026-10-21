@@ -122,16 +122,45 @@ export function playNote(midi: number, dur = 1, timbre: Timbre = 'piano'): Promi
 }
 
 /** Play notes back to back. Resolves when the last one has finished. */
-export function playSequence(notes: SeqNote[], timbre: Timbre = 'piano', lead = 0.06): Promise<void> {
+export function playSequence(notes: SeqNote[], timbre: Timbre = 'piano', lead = 0.06, opts: PlayOptions = {}): Promise<void> {
   const { ctx: c, out } = audio();
-  let t = c.currentTime + lead;
-  let end = t;
+  const end = scheduleLine(c, out, notes, timbre, c.currentTime + lead, opts.vel);
+  if (opts.muteMic !== false) suppressMicUntil(end);
+  return new Promise((resolve) => setTimeout(resolve, (end - c.currentTime) * 1000));
+}
+
+export interface PlayOptions {
+  /** Pause the pitch detector while this plays (default). Turn off for headphone backing. */
+  muteMic?: boolean;
+  /** Loudness 0..1 of each note. */
+  vel?: number;
+}
+
+function scheduleLine(c: AudioContext, out: AudioNode, notes: SeqNote[], timbre: Timbre, from: number, vel?: number): number {
+  let t = from;
+  let end = from;
   for (const n of notes) {
-    end = (timbre === 'voice' ? voiceNote : pianoNote)(c, out, n.midi, t, n.dur);
+    end = (timbre === 'voice' ? voiceNote : pianoNote)(c, out, n.midi, t, n.dur, vel);
     t += n.dur + (n.gap ?? 0.04);
   }
-  suppressMicUntil(end);
+  return end;
+}
+
+/** Play several lines together, e.g. a melody with its harmony. */
+export function playLines(lines: { notes: SeqNote[]; timbre?: Timbre; vel?: number }[], opts: PlayOptions = {}): Promise<void> {
+  const { ctx: c, out } = audio();
+  const from = c.currentTime + 0.06;
+  const end = Math.max(...lines.map((l) => scheduleLine(c, out, l.notes, l.timbre ?? 'piano', from, l.vel)));
+  if (opts.muteMic !== false) suppressMicUntil(end);
   return new Promise((resolve) => setTimeout(resolve, (end - c.currentTime) * 1000));
+}
+
+/** A soft sustained backing note (or chord) from the voice timbre, for ad-lib and harmony practice. */
+export function playDrone(midis: number[], dur: number, opts: PlayOptions = {}): Promise<void> {
+  return playLines(
+    midis.map((midi) => ({ notes: [{ midi, dur }], timbre: 'voice' as const, vel: opts.vel ?? 0.12 })),
+    opts,
+  );
 }
 
 /** A slow pitch slide, for demoing glides and sirens. */

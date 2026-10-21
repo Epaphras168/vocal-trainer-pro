@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Lightbulb, Play, X } from 'lucide-react';
 import { findLesson, type Demo, type GradedStep, type Step } from '../content/curriculum';
 import type { Score } from '../audio/scoring';
-import { midiToName } from '../audio/notes';
+import { midiToName, registerZones, tessitura } from '../audio/notes';
 import { playGlide, playNote, playSequence } from '../audio/synth';
 import { ExerciseRunner } from '../exercises/ExerciseRunner';
 import { noteFor, placeMelody, type VoiceRange } from '../exercises/common';
@@ -163,6 +163,12 @@ function detailFor(step: Step, score: Score): string | undefined {
   if (step.kind === 'rhythm') return `Timing ${score.precision}% · hit ${score.sustain}% of the beats`;
   if (step.kind === 'breath') return `Length ${score.precision}% of the goal · evenness ${score.sustain}%`;
   if (step.kind === 'glide') return `Covered ${score.precision}% of the slide · smoothness ${score.sustain}%`;
+  if (step.kind === 'harmony') {
+    const hits = score.notes.filter((n) => n.hit).length;
+    return `${hits} of ${score.notes.length} harmony notes on pitch · precision ${score.precision}%`;
+  }
+  if (step.kind === 'swell') return `Pitch held ${score.precision}% · volume shape ${score.sustain}%`;
+  if (step.kind === 'improv') return `In the key ${score.precision}% · variety ${score.sustain}%`;
   return undefined;
 }
 
@@ -184,6 +190,8 @@ function Teach({ step, range, onNext }: { step: Extract<Step, { kind: 'teach' }>
         <Mascot mood={playing ? 'sing' : 'idle'} size={170} />
       </div>
       <p className="teach__body">{step.body}</p>
+      {step.personal && <p className="teach__personal">{personalLine(step.personal, range)}</p>}
+      {step.checklist && <Checklist items={step.checklist} />}
       {step.tip && (
         <p className="tip">
           <Lightbulb size={20} /> {step.tip}
@@ -204,6 +212,35 @@ function Teach({ step, range, onNext }: { step: Extract<Step, { kind: 'teach' }>
         Let's do it
       </button>
     </div>
+  );
+}
+
+function personalLine(kind: 'zones' | 'tessitura', range: VoiceRange): string {
+  const span = (r: [number, number]) => `${midiToName(r[0])}–${midiToName(r[1])}`;
+  if (kind === 'zones') {
+    const z = registerZones(range.low, range.high);
+    return `Your map (a starting guess from your range): lower voice ${span(z.chest)} · blend ${span(z.mix)} · lighter top ${span(z.head)}.`;
+  }
+  return `Your comfy middle is about ${span(tessitura(range.low, range.high))}. Songs that live there feel easy.`;
+}
+
+function Checklist({ items }: { items: string[] }) {
+  const [ticked, setTicked] = useState<number[]>([]);
+  return (
+    <ul className="teach__checks" aria-label="Try these">
+      {items.map((item, i) => (
+        <li key={item}>
+          <label>
+            <input
+              type="checkbox"
+              checked={ticked.includes(i)}
+              onChange={() => setTicked((t) => (t.includes(i) ? t.filter((x) => x !== i) : [...t, i]))}
+            />
+            <span>{item}</span>
+          </label>
+        </li>
+      ))}
+    </ul>
   );
 }
 

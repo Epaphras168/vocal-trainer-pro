@@ -8,6 +8,9 @@ import { GlideExercise } from './GlideExercise';
 import { BreathExercise } from './BreathExercise';
 import { QuizExercise } from './QuizExercise';
 import { RhythmExercise } from './RhythmExercise';
+import { SwellExercise } from './SwellExercise';
+import { ImprovExercise } from './ImprovExercise';
+import { HarmonyExercise } from './HarmonyExercise';
 
 export function needsMic(step: GradedStep): boolean {
   if (step.kind === 'quiz') return false;
@@ -36,6 +39,12 @@ export function ExerciseRunner({ step, range, onComplete }: Props) {
         return <QuizExercise step={step} range={range} onComplete={onComplete} />;
       case 'rhythm':
         return <RhythmExercise step={step} range={range} onComplete={onComplete} />;
+      case 'swell':
+        return <SwellExercise step={step} range={range} onComplete={onComplete} />;
+      case 'improv':
+        return <ImprovExercise step={step} range={range} onComplete={onComplete} />;
+      case 'harmony':
+        return <HarmonyExercise step={step} range={range} onComplete={onComplete} />;
     }
   })();
   return needsMic(step) ? <MicGate>{body}</MicGate> : body;

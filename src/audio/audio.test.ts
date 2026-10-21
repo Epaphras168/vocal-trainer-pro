@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { centsFromFolded, classifyVoice, fitToRange, freqToMidi, midiToFreq, midiToName, nameToMidi, readNote } from './notes';
-import { scoreBreath, scoreGlide, scoreNotes, scoreTaps, type Sample } from './scoring';
+import { centsFromFolded, classifyVoice, fitToRange, freqToMidi, intervalBySize, midiToFreq, midiToName, nameToMidi, readNote, registerZones, scaleNotes, SCALES, tessitura } from './notes';
+import { scoreBreath, scoreGlide, scoreImprov, scoreNotes, scoreSwell, scoreTaps, type Sample } from './scoring';
 
 describe('notes', () => {
   it('maps A4 to 440 Hz and back', () => {
@@ -110,5 +110,81 @@ describe('scoring', () => {
     const beats = [0, 1, 2, 3];
     expect(scoreTaps([0.01, 1.02, 1.99, 3.0], beats).accuracy).toBe(100);
     expect(scoreTaps([0.3, 1.3], beats).accuracy).toBeLessThan(20);
+  });
+});
+
+describe('scales, intervals and zones', () => {
+  it('lists the notes of a key across a window', () => {
+    // C major pentatonic from C4..C5
+    expect(scaleNotes(60, SCALES.majorPentatonic, 60, 72)).toEqual([60, 62, 64, 67, 69, 72]);
+  });
+
+  it('has a reference tune for each interval', () => {
+    expect(intervalBySize(7)?.name).toBe('Perfect 5th');
+    expect(intervalBySize(7)?.up).toMatch(/Twinkle/);
+  });
+
+  it('splits a range into thirds and finds the comfy middle', () => {
+    const z = registerZones(48, 72);
+    expect(z.chest).toEqual([48, 56]);
+    expect(z.mix).toEqual([56, 64]);
+    expect(z.head).toEqual([64, 72]);
+    expect(tessitura(48, 72)).toEqual([54, 66]);
+  });
+});
+
+const voiced = (from: number, to: number, midi: (t: number) => number | null, db: (t: number) => number): Sample[] => {
+  const out: Sample[] = [];
+  for (let t = from; t < to; t += 1 / 60) out.push({ t, midi: midi(t), rms: 10 ** (db(t) / 20) });
+  return out;
+};
+
+describe('swell (dynamics)', () => {
+  const tri = (peakDb: number, span: number) => (t: number) => -40 + peakDb * (1 - Math.abs(t - span / 2) / (span / 2));
+  it('rewards a steady note that grows then fades', () => {
+    const s = scoreSwell(voiced(0, 6, () => 60, tri(14, 6)), 60, 6);
+    expect(s.sustain).toBeGreaterThan(85);
+    expect(s.accuracy).toBeGreaterThan(80);
+  });
+  it('does not reward a flat-volume note', () => {
+    const s = scoreSwell(voiced(0, 6, () => 60, () => -30), 60, 6);
+    expect(s.sustain).toBeLessThan(15);
+  });
+  it('does not care how loud the room or mic is', () => {
+    const quiet = scoreSwell(voiced(0, 6, () => 60, (t) => tri(14, 6)(t) - 25), 60, 6);
+    const loud = scoreSwell(voiced(0, 6, () => 60, tri(14, 6)), 60, 6);
+    expect(quiet.sustain).toBe(loud.sustain);
+  });
+  it('wants the pitch to stay put', () => {
+    const s = scoreSwell(voiced(0, 6, (t) => 60 + (t > 3 ? 3 : 0), tri(14, 6)), 60, 6);
+    expect(s.accuracy).toBeLessThan(75);
+  });
+  it('wants a rise-and-fall, not just a rise', () => {
+    const s = scoreSwell(voiced(0, 6, () => 60, (t) => -40 + t * 3), 60, 6);
+    expect(s.sustain).toBeLessThan(55);
+  });
+});
+
+describe('ad-lib scoring', () => {
+  const key = [60, 62, 64, 67, 69];
+  const line = (notes: number[], each = 0.5): Sample[] => notes.flatMap((m, i) => voiced(i * each, (i + 1) * each, () => m, () => -20));
+  it('rewards moving around inside the key', () => {
+    const s = scoreImprov(line([60, 64, 67, 64, 69, 62, 60, 67, 69, 64, 62, 60]), key, { seconds: 6 });
+    expect(s.inKey).toBeGreaterThan(0.95);
+    expect(s.distinct).toBeGreaterThanOrEqual(5);
+    expect(s.accuracy).toBeGreaterThan(85);
+  });
+  it('does not reward droning on one note', () => {
+    const s = scoreImprov(line([60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60]), key, { seconds: 6 });
+    expect(s.distinct).toBe(1);
+    expect(s.accuracy).toBeLessThan(55);
+  });
+  it('marks down notes outside the key', () => {
+    const s = scoreImprov(line([61, 63, 66, 68, 70, 61, 63, 66, 68, 70, 61, 63]), key, { seconds: 6 });
+    expect(s.inKey).toBeLessThan(0.1);
+    expect(s.accuracy).toBeLessThan(35);
+  });
+  it('scores silence as zero', () => {
+    expect(scoreImprov(voiced(0, 6, () => null, () => -60), key, { seconds: 6 }).accuracy).toBe(0);
   });
 });

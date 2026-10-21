@@ -84,6 +84,8 @@ export interface GameState {
   accent: AccentId;
   ownedAccents: AccentId[];
   sound: boolean;
+  /** Wearing headphones: backing tracks can play while the mic listens. */
+  headphones: boolean;
 
   /** Queue of moments the shell celebrates (level ups, badges). */
   celebrations: Celebration[];
@@ -114,6 +116,7 @@ interface Actions {
   setAccent(id: AccentId): void;
   setTheme(t: ThemePref): void;
   setSound(on: boolean): void;
+  setHeadphones(on: boolean): void;
   dismissCelebration(id: number): void;
   setFriendCount(n: number): void;
   acknowledgeLostStreak(): void;
@@ -154,6 +157,7 @@ function initialState(): GameState {
     accent: 'ember',
     ownedAccents: ['ember'],
     sound: true,
+    headphones: false,
     celebrations: [],
   };
 }
@@ -177,8 +181,12 @@ export function weekXp(xpByDay: Record<DayKey, number>, weekId: DayKey): number 
   return weekDays(weekId).reduce((sum, d) => sum + (xpByDay[d] ?? 0), 0);
 }
 
+export function completedUnitIds(lessons: Record<string, LessonRecord>): string[] {
+  return UNITS.filter((u) => u.lessons.every((l) => lessons[l.id])).map((u) => u.id);
+}
+
 export function unitsCompleted(lessons: Record<string, LessonRecord>): number {
-  return UNITS.filter((u) => u.lessons.every((l) => lessons[l.id])).length;
+  return completedUnitIds(lessons).length;
 }
 
 function badgeContext(s: GameState): BadgeContext {
@@ -191,6 +199,8 @@ function badgeContext(s: GameState): BadgeContext {
     drillsCompleted: s.activity.filter((a) => a.kind !== 'lesson').length,
     rangeSemitones: s.range ? s.range.high - s.range.low : 0,
     unitsCompleted: unitsCompleted(s.lessons),
+    unitIds: completedUnitIds(s.lessons),
+    totalUnits: UNITS.length,
     gameBest: s.gameBest,
     friends: s.friendCount,
     warmups: s.activity.filter((a) => a.kind === 'warmup').length,
@@ -351,6 +361,7 @@ export const useGame = create<GameState & Actions>()(
       setAccent: (id) => set((s) => (s.ownedAccents.includes(id) ? { accent: id } : {})),
       setTheme: (theme) => set({ theme }),
       setSound: (sound) => set({ sound }),
+      setHeadphones: (headphones) => set({ headphones }),
       dismissCelebration: (id) => set((s) => ({ celebrations: s.celebrations.filter((c) => c.id !== id) })),
       setFriendCount: (n) =>
         set((s) => {

@@ -112,3 +112,44 @@
   font-size: 0.88rem;
   font-weight: 600;
 }
+
+.teach__personal {
+  font-weight: 800;
+  color: var(--accent-ink, var(--accent));
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+}
+
+.teach__checks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.teach__checks label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teach__checks input {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  accent-color: var(--teal);
+  flex: none;
+}
+
+.teach__checks input:checked + span {
+  color: var(--text-mute);
+  text-decoration: line-through;
+}

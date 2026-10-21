@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { RotateCcw, SkipForward } from 'lucide-react';
+import { Headphones, RotateCcw, SkipForward } from 'lucide-react';
 import type { Step } from '../content/curriculum';
 import { pitchEngine } from '../audio/pitchEngine';
 import { midiToName } from '../audio/notes';
 import { scoreNotes, type TargetNote } from '../audio/scoring';
-import { audioNow, playSequence, scheduleClick, sfx, toEngineTime } from '../audio/synth';
+import { audioNow, playLines, playSequence, scheduleClick, sfx, toEngineTime } from '../audio/synth';
+import { useGame } from '../game/store';
 import { PitchRoll } from '../components/PitchRoll';
 import { TuningMeter } from '../components/TuningMeter';
 import type { Mood } from '../components/Mascot';
@@ -27,18 +28,23 @@ interface MelodyProps extends ExerciseProps<MelodyStep> {
   metronome?: boolean;
   /** Use these exact notes instead of placing `step.offsets` in the range. */
   notesOverride?: number[];
+  /** A tune sung by someone else; the singer's notes are the harmony to it. */
+  lead?: number[];
 }
 
-export function MelodyExercise({ step, range, onComplete, metronome = false, notesOverride }: MelodyProps) {
+export function MelodyExercise({ step, range, onComplete, metronome = false, notesOverride, lead }: MelodyProps) {
+  const headphones = useGame((s) => s.headphones);
+  const setHeadphones = useGame((s) => s.setHeadphones);
   const notes = useMemo(() => notesOverride ?? placeMelody(step.offsets, range), [notesOverride, step.offsets, range]);
   const targets = useMemo(() => melodyTargets(notes, step.beat), [notes, step.beat]);
-  const view = useMemo(() => viewFor(notes, 3), [notes]);
+  const view = useMemo(() => viewFor(lead ? [...notes, ...lead] : notes, 3), [notes, lead]);
   const [phase, setPhase] = useState<Phase>('listen');
   const [origin, setOrigin] = useState<number | null>(null);
   const [count, setCount] = useState<number | null>(null);
   const [results, setResults] = useState<('hit' | 'miss' | null)[]>(() => notes.map(() => null));
   const [current, setCurrent] = useState<number>(-1);
   const [attempt, setAttempt] = useState(0);
+  const [phaseNote, setPhaseNote] = useState('Listen');
   const rec = useRecorder();
   const run = useRef(0);
   // Phones get a shorter visible window so each note stays wide enough to read.
@@ -53,10 +59,18 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
     // 1. Listen
     setPhase('listen');
     setOrigin(pitchEngine.now() + 0.06);
-    await playSequence(
-      notes.map((midi) => ({ midi, dur: step.beat - GAP, gap: GAP })),
-      'piano',
-    );
+    const line = (ns: number[]) => ns.map((midi) => ({ midi, dur: step.beat - GAP, gap: GAP }));
+    if (lead) {
+      // First the tune on its own, then both parts together.
+      setPhaseNote('The tune');
+      await playSequence(line(lead), 'piano');
+      if (!alive()) return;
+      await sleep(300);
+      setPhaseNote('Tune + harmony');
+      await playLines([{ notes: line(lead) }, { notes: line(notes), timbre: 'voice', vel: 0.3 }]);
+    } else {
+      await playSequence(line(notes), 'piano');
+    }
     if (!alive()) return;
     await sleep(250);
     if (!alive()) return;
@@ -79,6 +93,8 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
 
     // 3. Sing along, grading each note as it passes
     setPhase('sing');
+    // With headphones the tune plays under you; without, you carry your part alone.
+    if (lead && headphones) void playSequence(lead.map((midi) => ({ midi, dur: step.beat - GAP, gap: GAP })), 'piano', 0.02, { muteMic: false, vel: 0.3 });
     const total = targets[targets.length - 1].end + LATENCY + 0.25;
     while (pitchEngine.now() - singAt < total) {
       if (!alive()) return;
@@ -136,7 +152,7 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
               </span>
             </div>
           )}
-          <span className="roll__chip">{phase === 'listen' ? 'Listen' : 'Your turn'}</span>
+          <span className="roll__chip">{phase === 'listen' ? phaseNote : 'Your turn'}</span>
         </PitchRoll>
       }
       side={
@@ -144,10 +160,21 @@ export function MelodyExercise({ step, range, onComplete, metronome = false, not
           <CoachCard mood={mood} message={message} coachInput={phase === 'sing'}>
             <TuningMeter target={current >= 0 ? notes[current] : null} />
           </CoachCard>
-          <div className="notes-strip" aria-label="Notes">
+          {lead && (
+            <>
+              <p className="mute" style={{ fontWeight: 700 }}>
+                The tune: {lead.map(midiToName).join(' · ')}
+              </p>
+              <label className="toggle-row">
+                <input type="checkbox" checked={headphones} onChange={(e) => setHeadphones(e.target.checked)} />
+                <Headphones size={18} /> Headphones on (tune plays while you sing)
+              </label>
+            </>
+          )}
+          <div className="notes-strip" aria-label={lead ? 'Your harmony notes' : 'Notes'}>
             {notes.map((m, i) => (
               <span key={i} data-state={results[i] ?? (i === current ? 'now' : '')}>
-                {midiToName(m)}
+                {step.lyrics?.[i] ?? midiToName(m)}
               </span>
             ))}
           </div>

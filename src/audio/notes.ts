@@ -132,3 +132,78 @@ export function fitToRange(midi: number, low: number, high: number): number {
   while (m > high && m - 12 >= low - 1) m -= 12;
   return Math.min(Math.max(m, low), high);
 }
+
+// Scale shapes as semitone offsets from the root. Used for lessons, ad-lib lanes
+// and "is this note in the key?" checks.
+export const SCALES = {
+  major: [0, 2, 4, 5, 7, 9, 11, 12],
+  minor: [0, 2, 3, 5, 7, 8, 10, 12],
+  majorPentatonic: [0, 2, 4, 7, 9],
+  minorPentatonic: [0, 3, 5, 7, 10],
+  blues: [0, 3, 5, 6, 7, 10],
+  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+} as const;
+
+/** Every note of a scale (in pitch classes) across a window of the keyboard. */
+export function scaleNotes(root: number, shape: readonly number[], low: number, high: number): number[] {
+  const classes = new Set(shape.map((s) => (((root + s) % 12) + 12) % 12));
+  const out: number[] = [];
+  for (let m = Math.ceil(low); m <= high; m++) if (classes.has(((m % 12) + 12) % 12)) out.push(m);
+  return out;
+}
+
+export interface IntervalInfo {
+  name: string;
+  semitones: number;
+  /** A tune whose opening notes climb by this interval. */
+  up?: string;
+  /** A tune whose opening notes fall by this interval. */
+  down?: string;
+}
+
+// Reference tunes are the classic ear-training trick: tie a new interval to a
+// song you already know. Only widely-agreed examples are listed.
+export const INTERVALS: IntervalInfo[] = [
+  { name: 'Minor 2nd', semitones: 1, up: 'Jaws theme', down: 'Für Elise' },
+  { name: 'Major 2nd', semitones: 2, up: 'Happy Birthday', down: 'Mary Had a Little Lamb' },
+  { name: 'Minor 3rd', semitones: 3, up: 'Greensleeves', down: 'Hey Jude' },
+  { name: 'Major 3rd', semitones: 4, up: 'When the Saints Go Marching In', down: 'Summertime' },
+  { name: 'Perfect 4th', semitones: 5, up: 'Here Comes the Bride', down: 'O Come All Ye Faithful' },
+  { name: 'Tritone', semitones: 6, up: 'The Simpsons theme', down: 'Black Sabbath' },
+  { name: 'Perfect 5th', semitones: 7, up: 'Twinkle Twinkle Little Star', down: 'The Flintstones' },
+  { name: 'Minor 6th', semitones: 8, up: 'The Entertainer', down: 'Love Story theme' },
+  { name: 'Major 6th', semitones: 9, up: 'My Bonnie Lies Over the Ocean', down: 'Nobody Knows the Trouble I’ve Seen' },
+  { name: 'Minor 7th', semitones: 10, up: 'Somewhere (West Side Story)', down: 'Watermelon Man' },
+  { name: 'Major 7th', semitones: 11, up: 'Take On Me (chorus)', down: 'I Love You (Cole Porter)' },
+  { name: 'Octave', semitones: 12, up: 'Somewhere Over the Rainbow', down: 'Willow Weep for Me' },
+];
+
+export const intervalByName = (name: string): IntervalInfo | undefined => INTERVALS.find((i) => i.name === name);
+export const intervalBySize = (semitones: number): IntervalInfo | undefined => INTERVALS.find((i) => i.semitones === semitones);
+
+export interface RegisterZones {
+  /** Lower third: speaking-like, heavier "chest" sound. */
+  chest: [number, number];
+  /** Middle third: where the voice blends. Usually holds the bridge. */
+  mix: [number, number];
+  /** Upper third: lighter "head" sound. */
+  head: [number, number];
+}
+
+/**
+ * Rough register zones for a measured range. Real passaggio notes depend on
+ * voice type and technique and sources disagree, so these are thirds of the
+ * singer's own range: a starting map to explore, not a diagnosis.
+ */
+export function registerZones(low: number, high: number): RegisterZones {
+  const third = (high - low) / 3;
+  const a = Math.round(low + third);
+  const b = Math.round(low + third * 2);
+  return { chest: [low, a], mix: [a, b], head: [b, high] };
+}
+
+/** The comfortable middle of a range: the band most songs should sit in. */
+export function tessitura(low: number, high: number): [number, number] {
+  const q = (high - low) / 4;
+  return [Math.round(low + q), Math.round(high - q)];
+}

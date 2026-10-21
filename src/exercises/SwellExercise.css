@@ -1,0 +1,35 @@
+.swell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.swell__chart {
+  width: 100%;
+  height: auto;
+  background: var(--roll-bg);
+  border-radius: var(--r-md);
+}
+
+.swell__ideal {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+
+.swell__live {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.swell__now {
+  stroke: var(--line);
+  stroke-width: 2;
+}

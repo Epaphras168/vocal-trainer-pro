@@ -24,6 +24,8 @@ interface Props {
   origin?: number | null;
   /** A single note held across the whole roll. */
   hold?: number | null;
+  /** Notes of a key, drawn as faint guide lines; the line turns gold on any of them (ad-lib practice). */
+  lanes?: number[];
   /** Cents counted as on-target for colouring the line. */
   tolerance?: number;
   /** Seconds of history visible. */
@@ -70,6 +72,7 @@ export function PitchRoll({
   targets = [],
   origin = null,
   hold = null,
+  lanes,
   tolerance = 50,
   windowSec = 6,
   playhead = 0.78,
@@ -82,8 +85,8 @@ export function PitchRoll({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trail = useRef<TrailPoint[]>([]);
   // Latest props for the draw loop without restarting it.
-  const props = useRef({ low, high, targets, origin, hold, tolerance, windowSec, playhead, live });
-  props.current = { low, high, targets, origin, hold, tolerance, windowSec, playhead, live };
+  const props = useRef({ low, high, targets, origin, hold, lanes, tolerance, windowSec, playhead, live });
+  props.current = { low, high, targets, origin, hold, lanes, tolerance, windowSec, playhead, live };
 
   useEffect(() => {
     trail.current = [];
@@ -96,8 +99,11 @@ export function PitchRoll({
       if (!p.live) return;
       let on = false;
       if (f.midi !== null) {
-        const target = targetAt(p, f.t);
-        on = target !== null && Math.abs(centsFromFolded(f.midi, target)) <= p.tolerance;
+        if (p.lanes) on = p.lanes.some((m) => Math.abs(centsFromFolded(f.midi as number, m)) <= p.tolerance && Math.abs(f.midi! - m) < 6);
+        else {
+          const target = targetAt(p, f.t);
+          on = target !== null && Math.abs(centsFromFolded(f.midi, target)) <= p.tolerance;
+        }
       }
       trail.current.push({ t: f.t, midi: f.midi, on });
       const cutoff = f.t - p.windowSec - 1;
@@ -168,6 +174,21 @@ export function PitchRoll({
             g.fillRect(GUTTER, top + rowH - 1, plotW, 1);
           }
         }
+      }
+
+      if (p.lanes) {
+        g.strokeStyle = colors.gold;
+        g.globalAlpha = 0.5;
+        g.lineWidth = Math.max(6, Math.min(rowH * 0.7, 16));
+        g.lineCap = 'round';
+        for (const m of p.lanes) {
+          if (m < p.low || m > p.high) continue;
+          g.beginPath();
+          g.moveTo(GUTTER + 12, y(m));
+          g.lineTo(w - 12, y(m));
+          g.stroke();
+        }
+        g.globalAlpha = 1;
       }
 
       const latest = trail.current[trail.current.length - 1];

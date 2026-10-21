@@ -197,3 +197,117 @@ export function grade(accuracy: number): { label: string; tier: 'perfect' | 'gre
   if (accuracy >= 50) return { label: 'Nice work!', tier: 'good' };
   return { label: 'Every note counts!', tier: 'keep-going' };
 }
+
+const dbOf = (rms: number) => 20 * Math.log10(Math.max(rms, 1e-5));
+
+function smoothDb(xs: number[], radius = 4): number[] {
+  return xs.map((_, i) => {
+    const a = Math.max(0, i - radius);
+    const b = Math.min(xs.length, i + radius + 1);
+    let sum = 0;
+    for (let j = a; j < b; j++) sum += xs[j];
+    return sum / (b - a);
+  });
+}
+
+/**
+ * Dynamics (messa di voce): hold one note while getting louder, then softer.
+ * The pitch must stay on the note; the loudness, in dB, should climb through
+ * the first half and fall through the second. Relative to the singer's own
+ * level, so it works at any distance from the mic.
+ */
+export function scoreSwell(samples: Sample[], target: number, seconds: number, toleranceCents = 60): Score & { riseDb: number; fallDb: number } {
+  const voiced = samples.filter((s) => s.midi !== null && Math.abs(centsFromFolded(s.midi as number, target)) <= toleranceCents * 1.6);
+  const empty = { precision: 0, sustain: 0, accuracy: 0, notes: [], riseDb: 0, fallDb: 0 };
+  if (voiced.length < 12) return empty;
+  const t0 = voiced[0].t;
+  const t1 = voiced[voiced.length - 1].t;
+  const span = Math.max(0.5, t1 - t0);
+  const levels = smoothDb(voiced.map((s) => dbOf(s.rms)));
+  const mid = t0 + span / 2;
+  const first = voiced.map((s, i) => ({ t: s.t, db: levels[i] })).filter((p) => p.t <= mid);
+  const second = voiced.map((s, i) => ({ t: s.t, db: levels[i] })).filter((p) => p.t > mid);
+  if (first.length < 4 || second.length < 4) return empty;
+  const peak = Math.max(...levels);
+  const start = first.slice(0, Math.max(3, Math.floor(first.length * 0.2))).reduce((a, p) => a + p.db, 0) / Math.max(3, Math.floor(first.length * 0.2));
+  const endN = Math.max(3, Math.floor(second.length * 0.2));
+  const end = second.slice(-endN).reduce((a, p) => a + p.db, 0) / endN;
+  const riseDb = peak - start;
+  const fallDb = peak - end;
+  // Where the peak lands: ideally near the middle.
+  const peakAt = voiced[levels.indexOf(peak)].t;
+  const centred = clamp01(1 - Math.abs((peakAt - t0) / span - 0.5) / 0.35);
+  // 6 dB each way is a clearly audible swell; 3 dB is the least that counts.
+  const shape = (clamp01((riseDb - 1.5) / 4.5) + clamp01((fallDb - 1.5) / 4.5)) / 2;
+  const length = clamp01(span / (seconds * 0.8));
+  const inTune = voiced.map((s) => framePrecision(centsFromFolded(s.midi as number, target))).reduce((a, b) => a + b, 0) / voiced.length;
+  const dynamics = shape * (0.6 + 0.4 * centred);
+  const target0: TargetNote = { midi: target, start: 0, end: seconds };
+  const note: NoteScore = { target: target0, cents: null, precision: inTune, sustain: dynamics, hit: dynamics > 0.5 };
+  return {
+    precision: Math.round(inTune * length * 100),
+    sustain: Math.round(dynamics * 100),
+    accuracy: Math.round((inTune * 0.4 + dynamics * 0.6) * length * 100),
+    notes: [note],
+    riseDb,
+    fallDb,
+  };
+}
+
+export interface ImprovScore extends Score {
+  /** Share of voiced time on notes of the key, 0..1. */
+  inKey: number;
+  /** How many different notes of the key were used. */
+  distinct: number;
+  /** How many times the voice moved to a new note. */
+  moves: number;
+}
+
+/**
+ * Ad-libbing has no single right answer, so we grade what makes it feel
+ * musical: staying in the key, using several different notes, and actually
+ * moving between them rather than droning on one.
+ */
+export function scoreImprov(samples: Sample[], key: number[], opts: { seconds: number; wantDistinct?: number; wantMoves?: number; tolerance?: number } ): ImprovScore {
+  const tol = opts.tolerance ?? 45;
+  const voiced = samples.filter((s) => s.midi !== null) as { t: number; midi: number; rms: number }[];
+  const wantDistinct = opts.wantDistinct ?? 4;
+  const wantMoves = opts.wantMoves ?? 8;
+  if (voiced.length < 10) return { precision: 0, sustain: 0, accuracy: 0, notes: [], inKey: 0, distinct: 0, moves: 0 };
+  const classes = new Set(key.map((m) => ((m % 12) + 12) % 12));
+  // Which key note (by pitch class) is this frame on, if any?
+  const nameOf = (m: number): number | null => {
+    const near = Math.round(m);
+    return Math.abs((m - near) * 100) <= tol && classes.has(((near % 12) + 12) % 12) ? near : null;
+  };
+  const hits = voiced.map((s) => nameOf(s.midi));
+  const inKey = hits.filter((h) => h !== null).length / voiced.length;
+  // A note counts as "visited" after ~0.15 s on it, so passing glides don't pad the numbers.
+  const visits: number[] = [];
+  let run: number | null = null;
+  let runLen = 0;
+  for (const h of hits) {
+    if (h !== null && h === run) runLen++;
+    else {
+      run = h;
+      runLen = h === null ? 0 : 1;
+    }
+    if (run !== null && runLen === 9) visits.push(run);
+  }
+  const distinct = new Set(visits.map((m) => ((m % 12) + 12) % 12)).size;
+  const moves = visits.filter((m, i) => i > 0 && m !== visits[i - 1]).length;
+  const duration = voiced[voiced.length - 1].t - voiced[0].t;
+  const presence = clamp01(voiced.length / (opts.seconds * 60 * 0.45));
+  const variety = clamp01(distinct / wantDistinct) * 0.6 + clamp01(moves / wantMoves) * 0.4;
+  const keyScore = clamp01((inKey - 0.4) / 0.5);
+  const accuracy = Math.round(clamp01(keyScore * 0.4 + variety * 0.6) * presence * (duration > 1 ? 1 : 0.5) * 100);
+  return {
+    precision: Math.round(keyScore * 100),
+    sustain: Math.round(variety * 100),
+    accuracy,
+    notes: [],
+    inKey,
+    distinct,
+    moves,
+  };
+}
