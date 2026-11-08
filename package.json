@@ -32,7 +32,7 @@
     "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react": "^6.2.1",
     "playwright": "^1.56.1",
     "typescript": "~5.9.2",
     "vite": "^7.1.0",
