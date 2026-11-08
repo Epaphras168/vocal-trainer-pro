@@ -21,7 +21,7 @@
     "@supabase/supabase-js": "^2.118.0",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.544.0",
-    "motion": "^12.23.0",
+    "motion": "^14.9.1",
     "pitchy": "^4.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
