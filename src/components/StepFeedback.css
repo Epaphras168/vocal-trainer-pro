@@ -53,7 +53,7 @@
 }
 
 .feedback--great .feedback__icon {
-  color: var(--teal);
+  color: var(--teal-text);
 }
 
 .feedback--good .feedback__icon {
@@ -61,7 +61,7 @@
 }
 
 .feedback--soft .feedback__icon {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .feedback__title {

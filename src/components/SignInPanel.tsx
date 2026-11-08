@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { cloud } from '../cloud/account';
+import { MIN_PASSWORD } from '../cloud/password';
+import { captchaEnabled, Turnstile } from './Turnstile';
 import { sfx } from '../audio/synth';
 import './SignInPanel.css';
 
@@ -18,6 +20,8 @@ export function SignInPanel({ title = 'Sign in', blurb }: { title?: string; blur
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaRound, setCaptchaRound] = useState(0);
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -29,6 +33,8 @@ export function SignInPanel({ title = 'Sign in', blurb }: { title?: string; blur
       setError(friendly((err as Error).message));
     } finally {
       setBusy(false);
+      // A CAPTCHA token works once, so ask for a fresh one after every attempt.
+      if (captchaEnabled) setCaptchaRound((n) => n + 1);
     }
   };
 
@@ -38,25 +44,25 @@ export function SignInPanel({ title = 'Sign in', blurb }: { title?: string; blur
     run(async () => {
       const e = email.trim();
       if (mode === 'forgot') {
-        await cloud().sendPasswordReset(e);
+        await cloud().sendPasswordReset(e, captcha ?? undefined);
         setNotice(`If ${e} has an account, a reset link is on its way.`);
         return;
       }
       if (mode === 'signup') {
-        const result = await cloud().signUp(e, password);
+        const result = await cloud().signUp(e, password, captcha ?? undefined);
         if (result === 'confirm-email') {
           setNotice(`Almost there! Open the email we sent to ${e} to confirm your account, then sign in.`);
           setMode('signin');
           return;
         }
       } else {
-        await cloud().signInWithPassword(e, password);
+        await cloud().signInWithPassword(e, password, captcha ?? undefined);
       }
       sfx('success');
     });
 
   const validEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
-  const ready = validEmail && (mode === 'forgot' || password.length >= 6);
+  const ready = validEmail && (mode === 'forgot' || (mode === 'signup' ? password.length >= MIN_PASSWORD : password.length > 0)) && (!captchaEnabled || captcha !== null);
   const switchTo = (m: Mode) => {
     setMode(m);
     setError(null);
@@ -116,12 +122,13 @@ export function SignInPanel({ title = 'Sign in', blurb }: { title?: string; blur
               className="field"
               type="password"
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              placeholder={mode === 'signup' ? 'At least 6 characters' : 'Your password'}
+              placeholder={mode === 'signup' ? `At least ${MIN_PASSWORD} characters` : 'Your password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </>
         )}
+        <Turnstile onToken={setCaptcha} resetKey={`${mode}-${captchaRound}`} />
         <button className="btn btn--primary btn--lg btn--block" disabled={!ready || busy}>
           <Mail size={20} />
           {busy ? 'One moment...' : mode === 'signup' ? 'Create account' : mode === 'forgot' ? 'Email me a reset link' : 'Sign in'}
@@ -208,13 +215,13 @@ export function NewPasswordPanel({ onDone }: { onDone: () => void }) {
         className="field"
         type="password"
         autoComplete="new-password"
-        placeholder="At least 6 characters"
+        placeholder={`At least ${MIN_PASSWORD} characters`}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         aria-label="New password"
         autoFocus
       />
-      <button className="btn btn--primary btn--lg btn--block" disabled={password.length < 6 || busy}>
+      <button className="btn btn--primary btn--lg btn--block" disabled={password.length < MIN_PASSWORD || busy}>
         Save password
       </button>
       {error && (
@@ -241,7 +248,8 @@ function friendly(message: string): string {
   if (/invalid login credentials/i.test(message)) return "That email and password don't match. Try again, or reset your password.";
   if (/already registered|already exists/i.test(message)) return 'That email already has an account. Sign in instead.';
   if (/email not confirmed/i.test(message)) return 'Please confirm your email first. Check your inbox for our message.';
-  if (/at least 6|password should/i.test(message)) return 'Your password needs at least 6 characters.';
+  if (/at least \d+|password should/i.test(message)) return `Your password needs at least ${MIN_PASSWORD} characters.`;
+  if (/captcha/i.test(message)) return "The 'are you a person' check didn't pass. Wait a moment and try again.";
   if (/rate|too many|seconds/i.test(message)) return 'Too many tries. Wait a minute and try again.';
   if (/provider is not enabled/i.test(message)) return "Google sign-in isn't switched on yet. Use email for now.";
   if (/fetch|network/i.test(message)) return "Couldn't reach the server. Check your connection and try again.";

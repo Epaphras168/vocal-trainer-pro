@@ -21,7 +21,7 @@
 }
 
 .shop__gem {
-  color: var(--teal);
+  color: var(--teal-text);
 }
 
 .shop__flash {
@@ -83,7 +83,7 @@
 }
 
 .shop__palette {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .shop__accents {
@@ -148,5 +148,5 @@
   gap: 4px;
   margin-top: var(--s-2);
   font-weight: 900;
-  color: var(--teal);
+  color: var(--teal-text);
 }

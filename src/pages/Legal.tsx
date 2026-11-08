@@ -2,12 +2,14 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from '../components/Logo';
+import { captchaEnabled } from '../components/Turnstile';
+import { reportingEnabled } from '../diagnostics/monitoring';
 import './Legal.css';
 
 // Plain-language Privacy Policy and Terms. They describe what Belto actually
 // does today, so update them whenever the app's data handling changes.
 
-const UPDATED = 'October 19, 2026';
+const UPDATED = 'November 8, 2026';
 const CONTACT = import.meta.env.VITE_CONTACT_EMAIL as string | undefined;
 
 function Contact() {
@@ -60,7 +62,9 @@ export function Privacy() {
         <li>your email address and a password (the password is stored in scrambled, hashed form by our sign-in provider, never in readable form);</li>
         <li>if you choose Google sign-in, the name and email address Google shares with us (we don't get your Google password or other Google data);</li>
         <li>your display name, a friend code, and a copy of your progress;</li>
-        <li>who you're friends with, and any friend requests.</li>
+        <li>who you're friends with, and any friend requests;</li>
+        <li>who you have blocked, and any reports you send about another person (a report contains their name and the reason you give);</li>
+        <li>a short log of recent friend-code lookups, kept for a day, which lets us slow down people who guess codes.</li>
       </ul>
 
       <h2>Who can see what</h2>
@@ -89,11 +93,28 @@ export function Privacy() {
           <strong>Google</strong>, only if you choose to sign in with Google.
         </li>
       </ul>
+      {captchaEnabled && (
+        <ul>
+          <li>
+            <strong>Cloudflare Turnstile</strong> checks that sign-up and sign-in come from a person. It runs only on those screens and may look at your browser to decide.
+          </li>
+        </ul>
+      )}
       <p>Belto does not use advertising or analytics trackers.</p>
+      {reportingEnabled ? (
+        <p>
+          If Belto crashes, it sends a short error report to our error-tracking service: the error message, the page address (without anything after the "?"), the app version and your browser type. It does not include your name, email, progress or any audio.
+        </p>
+      ) : (
+        <p>Belto does not collect crash reports. If something breaks, you can email us from the Profile page, and the email only includes what you see in it.</p>
+      )}
 
       <h2>Keeping and deleting your information</h2>
       <p>
-        We keep your account information for as long as your account exists. To delete your account and everything stored with it, contact us at <Contact /> and we'll remove it. Your progress on your own device can be cleared at any time from your browser's settings, or with <em>Reset all progress</em> in Belto's Profile page.
+        We keep your account information for as long as your account exists. <strong>You can delete your account yourself</strong>: open Profile, then <em>Delete my account</em>. That removes your sign-in, profile, backup, friends and blocks. Reports you sent about others are kept, without a link to you, so we can act on them. You can also ask by emailing <Contact />. <em>Download my data</em> in the same place gives you a copy of what we hold.
+      </p>
+      <p>
+        Progress on your own device can be cleared at any time from your browser's settings, or with <em>Reset all progress</em> in Belto's Profile page. Deleting your account does not clear this device.
       </p>
 
       <h2>Children</h2>

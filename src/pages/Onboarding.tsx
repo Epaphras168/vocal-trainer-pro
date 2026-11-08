@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, Briefcase, Heart, Mic2, Music, PartyPopper, Users } from 'lucide-react';
+import { nameProblem } from '../cloud/summary';
 import { classifyVoice, midiToName, nameToMidi, octavesBetween } from '../audio/notes';
 import { pitchEngine } from '../audio/pitchEngine';
 import { sfx } from '../audio/synth';
@@ -110,7 +111,13 @@ export function Onboarding() {
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && name.trim() && next()}
                 autoFocus
+                aria-describedby="name-hint"
               />
+              {nameProblem(name) && (
+                <p id="name-hint" className="mute" role="status">
+                  {nameProblem(name)} We'll show "Singer" instead.
+                </p>
+              )}
               <button className="btn btn--primary btn--lg btn--block" disabled={!name.trim()} onClick={next}>
                 Nice to meet you <ArrowRight size={20} />
               </button>

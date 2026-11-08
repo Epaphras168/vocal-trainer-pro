@@ -39,7 +39,7 @@ export function RangeTest() {
           <section className="card stack" style={{ alignItems: 'center', textAlign: 'center' }}>
             <Mascot mood="cheer" size={130} />
             <p className="eyebrow">You sing like a</p>
-            <h2 className="h1" style={{ color: 'var(--accent)' }}>
+            <h2 className="h1" style={{ color: 'var(--accent-text)' }}>
               {voice}
             </h2>
             <p className="dim">

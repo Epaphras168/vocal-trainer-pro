@@ -105,7 +105,7 @@
 }
 
 .friends__trophy {
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 .board {
@@ -217,7 +217,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .brow__xp {
@@ -352,4 +352,18 @@
 .friends__formrow .field::placeholder {
   text-transform: none;
   letter-spacing: normal;
+}
+
+.safety__reasons {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.safety__reasons legend {
+  margin-bottom: var(--s-2);
+  font-weight: 700;
+  font-size: 0.9rem;
 }

@@ -12,16 +12,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <title>Belto · Find your voice</title>
-    <script>
-      // Pick the theme before first paint so there's no flash.
-      try {
-        var saved = JSON.parse(localStorage.getItem('belto-progress') || '{}').state || {};
-        var pref = saved.theme || 'system';
-        var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        document.documentElement.dataset.accent = saved.accent || 'ember';
-      } catch (e) {}
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

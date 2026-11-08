@@ -40,7 +40,7 @@
 }
 
 .landing__chipicon {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .landing__title {
@@ -85,14 +85,14 @@
   display: inline-flex;
   gap: 4px;
   align-items: center;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .landing__gems {
   display: inline-flex;
   gap: 4px;
   align-items: center;
-  color: var(--teal);
+  color: var(--teal-text);
 }
 
 .landing__cardtitle {

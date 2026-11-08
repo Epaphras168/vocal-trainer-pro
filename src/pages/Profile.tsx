@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, Gem, Lock, LogIn, LogOut, Monitor, Moon, Snowflake, Star, Sun, Trophy, Volume2, VolumeX, Zap } from 'lucide-react';
+import { Download, Flame, Gem, Lock, LogIn, LogOut, Mail, Monitor, Moon, Snowflake, Star, Sun, Trash2, Trophy, Volume2, VolumeX, Zap } from 'lucide-react';
 import { midiToName } from '../audio/notes';
 import { BADGES } from '../game/badges';
 import { addDays, dayKey, parseDay, weekStart } from '../game/dates';
 import { levelFromXp } from '../game/levels';
 import { useGame, voiceTypeOf, type ThemePref } from '../game/store';
-import { signOut, useAccount } from '../cloud/account';
+import { buildExport, deleteAccount, signOut, useAccount } from '../cloud/account';
+import { buildLabel } from '../diagnostics/info';
+import { feedbackLink } from '../components/feedback';
 import { ALL_LESSONS } from '../content/curriculum';
 import { BarChart, LineChart, RangeChart } from '../components/charts';
 import { ICONS } from '../components/icons';
@@ -290,10 +292,107 @@ function Settings() {
           </button>
         )}
       </div>
+      <DataRows />
       <p className="mute profile__note">
         Progress is saved on this device{account === 'signed-in' ? ' and backed up to your account' : ''}. Pitch detection runs entirely in your browser; no audio ever leaves it.
       </p>
     </section>
+  );
+}
+
+function downloadJson(filename: string, data: unknown): void {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Your data: take a copy, tell us something, or delete the account. */
+function DataRows() {
+  const account = useAccount((s) => s.status);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const feedback = feedbackLink('Belto feedback');
+
+  const download = async () => {
+    setBusy(true);
+    try {
+      downloadJson(`belto-my-data-${dayKey()}.json`, await buildExport());
+      setMessage('Saved a copy of your data.');
+    } catch (err) {
+      setMessage(`Couldn't make the file: ${(err as Error).message}`);
+    }
+    setBusy(false);
+  };
+
+  const remove = async () => {
+    setBusy(true);
+    try {
+      await deleteAccount();
+      setConfirm(false);
+      setMessage('Your account and everything stored with it is deleted. Progress on this device is still here.');
+    } catch (err) {
+      setMessage(`Couldn't delete the account: ${(err as Error).message}`);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <>
+      <div className="settings__row">
+        <span>
+          Download my data
+          <span className="mute settings__sub">A file with everything Belto holds about you</span>
+        </span>
+        <button className="btn btn--sm btn--ghost" onClick={download} disabled={busy}>
+          <Download size={16} /> Download
+        </button>
+      </div>
+      {feedback && (
+        <div className="settings__row">
+          <span>
+            Feedback or a problem?
+            <span className="mute settings__sub">Opens an email with your device details filled in</span>
+          </span>
+          <a className="btn btn--sm btn--ghost" href={feedback}>
+            <Mail size={16} /> Tell us
+          </a>
+        </div>
+      )}
+      {account === 'signed-in' && (
+        <div className="settings__row">
+          <span>
+            Delete my account
+            <span className="mute settings__sub">Removes your account, friends and backup. Can't be undone</span>
+          </span>
+          {confirm ? (
+            <span className="row">
+              <button className="btn btn--sm btn--ghost" onClick={() => setConfirm(false)} disabled={busy}>
+                Keep it
+              </button>
+              <button className="btn btn--sm btn--primary" onClick={remove} disabled={busy}>
+                <Trash2 size={16} /> Delete forever
+              </button>
+            </span>
+          ) : (
+            <button className="btn btn--sm btn--ghost" onClick={() => setConfirm(true)}>
+              <Trash2 size={16} /> Delete
+            </button>
+          )}
+        </div>
+      )}
+      {message && (
+        <p className="mute profile__note" role="status">
+          {message}
+        </p>
+      )}
+      <p className="mute profile__note">Belto {buildLabel()}</p>
+    </>
   );
 }
 

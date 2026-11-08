@@ -17,7 +17,7 @@
 }
 
 .tuner[data-state='on'] .tuner__note {
-  color: var(--gold);
+  color: var(--gold-text);
   transform: scale(1.08);
 }
 

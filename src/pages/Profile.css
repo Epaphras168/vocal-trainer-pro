@@ -94,17 +94,17 @@
 }
 
 .stat__icon--accent {
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-soft);
 }
 
 .stat__icon--gold {
-  color: var(--gold);
+  color: var(--gold-text);
   background: var(--gold-soft);
 }
 
 .stat__icon--teal {
-  color: var(--teal);
+  color: var(--teal-text);
   background: var(--teal-soft);
 }
 
@@ -134,7 +134,7 @@
 .stat__sub {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .profile__grid {

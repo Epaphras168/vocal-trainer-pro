@@ -52,7 +52,7 @@
 }
 
 .drillcard__go {
-  color: var(--accent);
+  color: var(--accent-text);
   transition: transform 0.2s var(--ease-spring);
 }
 
@@ -74,7 +74,7 @@
 
 .drillcard--feature .tile-icon {
   background: var(--gold-ink);
-  color: var(--gold);
+  color: var(--gold-text);
   box-shadow: none;
 }
 

@@ -62,7 +62,7 @@
 .hearts {
   display: inline-flex;
   gap: 2px;
-  color: var(--miss);
+  color: var(--miss-text);
 }
 
 .hearts svg[data-empty='true'] {

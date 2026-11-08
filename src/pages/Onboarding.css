@@ -54,7 +54,7 @@
 }
 
 .onb__voice {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: clamp(3.4rem, 12vw, 5rem);
 }
 

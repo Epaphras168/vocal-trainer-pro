@@ -37,7 +37,7 @@
 }
 
 .legal__body a {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;

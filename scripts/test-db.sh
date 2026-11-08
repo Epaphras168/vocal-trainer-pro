@@ -9,7 +9,7 @@ here="$(cd "$(dirname "$0")/.." && pwd)"
 
 psql -d postgres -q -c "drop database if exists $DB" -c "create database $DB" 2>/dev/null
 trap 'psql -d postgres -q -c "drop database if exists $DB"' EXIT
-for f in supabase/tests/auth_stub.sql supabase/migrations/*.sql supabase/tests/friends_test.sql; do
+for f in supabase/tests/auth_stub.sql supabase/migrations/*.sql supabase/tests/*_test.sql; do
   out="$(psql -d "$DB" -q -v ON_ERROR_STOP=1 -f "$here/$f" 2>&1)" || { echo "$out"; exit 1; }
-  grep -oE "ok: .*|ALL FRIEND TESTS PASSED" <<<"$out" || true
+  grep -oE "ok: .*|ALL [A-Z ]+ TESTS PASSED" <<<"$out" || true
 done

@@ -300,7 +300,7 @@ export function PitchRoll({
   }, []);
 
   return (
-    <div ref={wrapRef} className={`roll ${className}`}>
+    <div ref={wrapRef} className={`roll ${className}`} role="img" aria-label="Pitch display. Your voice is drawn as a line against the target notes. The coach text beside it describes how you are doing.">
       <canvas ref={canvasRef} aria-hidden="true" />
       {children}
     </div>

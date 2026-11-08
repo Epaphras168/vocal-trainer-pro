@@ -113,15 +113,15 @@
 }
 
 .reward--xp svg {
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 .reward--streak svg {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .reward--gems svg {
-  color: var(--teal);
+  color: var(--teal-text);
 }
 
 .reward--bump {
@@ -151,7 +151,7 @@
 }
 
 .results__perfect {
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 @keyframes flame-bump {

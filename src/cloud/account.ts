@@ -120,6 +120,25 @@ function startAutosync(userId: string): void {
   };
 }
 
+/** Deletes the account and everything the cloud holds. This device's progress stays. */
+export async function deleteAccount(): Promise<void> {
+  stopAutosync?.();
+  stopAutosync = null;
+  await cloud().deleteAccount();
+  signedOut();
+}
+
+/** A file's worth of the singer's own data: what's on this device, and (if signed in) what's in the cloud. */
+export async function buildExport(): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {
+    exportedAt: new Date().toISOString(),
+    note: 'Everything Belto stores about you. Audio is never recorded or uploaded.',
+    onThisDevice: snapshot(useGame.getState()),
+  };
+  if (backend && useAccount.getState().status === 'signed-in') out.inTheCloud = await backend.exportData();
+  return out;
+}
+
 export async function signOut(): Promise<void> {
   stopAutosync?.();
   await cloud().signOut();

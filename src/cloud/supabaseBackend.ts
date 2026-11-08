@@ -1,5 +1,5 @@
 import { createClient, type User } from '@supabase/supabase-js';
-import type { AddFriendResult, CloudBackend, CloudUser, FriendRow, ProfileSummary } from './types';
+import type { AddFriendResult, BlockedPerson, CloudBackend, CloudUser, FriendRow, ProfileSummary } from './types';
 
 // Supabase implementation. The database side lives in
 // supabase/migrations: row level security keeps every table private to its
@@ -76,20 +76,20 @@ export function createSupabaseBackend(url: string, key: string): CloudBackend {
       if (error) throw new Error(error.message);
     },
 
-    async signInWithPassword(email, password) {
-      const { error } = await sb.auth.signInWithPassword({ email, password });
+    async signInWithPassword(email, password, captchaToken) {
+      const { error } = await sb.auth.signInWithPassword({ email, password, options: { captchaToken } });
       if (error) throw new Error(error.message);
     },
 
-    async signUp(email, password) {
-      const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/friends` } });
+    async signUp(email, password, captchaToken) {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/friends`, captchaToken } });
       if (error) throw new Error(error.message);
       // No session means the project asks new users to confirm their email first.
       return data.session ? 'signed-in' : 'confirm-email';
     },
 
-    async sendPasswordReset(email) {
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/signin?reset=1` });
+    async sendPasswordReset(email, captchaToken) {
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/signin?reset=1`, captchaToken });
       if (error) throw new Error(error.message);
     },
 
@@ -164,6 +164,39 @@ export function createSupabaseBackend(url: string, key: string): CloudBackend {
 
     async removeFriend(otherId) {
       check(await sb.rpc('remove_friend', { p_other: otherId }));
+    },
+
+    async blockUser(otherId) {
+      check(await sb.rpc('block_user', { p_other: otherId }));
+    },
+
+    async unblockUser(otherId) {
+      check(await sb.rpc('unblock_user', { p_other: otherId }));
+    },
+
+    async blockedList() {
+      const rows = check(await sb.rpc('blocked_list')) as { id: string; display_name: string; avatar_hue: number }[];
+      return rows.map((r): BlockedPerson => ({ id: r.id, name: r.display_name, hue: r.avatar_hue }));
+    },
+
+    async reportUser(otherId, reason) {
+      return check(await sb.rpc('report_user', { p_other: otherId, p_reason: reason })) as 'reported' | 'rate_limited';
+    },
+
+    async exportData() {
+      const id = await uid();
+      const profile = check(await sb.from('profiles').select('*').eq('id', id).maybeSingle());
+      const progress = check(await sb.from('progress').select('data, updated_at').eq('user_id', id).maybeSingle());
+      const board = (check(await sb.rpc('friend_board', { p_week: '' })) as BoardRecord[]).map((r) => ({ name: r.display_name, relation: r.relation }));
+      const blocked = check(await sb.rpc('blocked_list')) as { display_name: string }[];
+      const { data } = await sb.auth.getSession();
+      return { account: { id, email: data.session?.user.email ?? null }, profile, progress, people: board.filter((r) => r.relation !== 'self'), blocked: blocked.map((b) => b.display_name) };
+    },
+
+    async deleteAccount() {
+      check(await sb.rpc('delete_my_account'));
+      // The account is gone; clear the local session without asking the server.
+      await sb.auth.signOut({ scope: 'local' });
     },
   };
 }

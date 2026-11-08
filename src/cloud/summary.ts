@@ -6,6 +6,21 @@ import type { FriendRow, ProfileSummary } from './types';
 
 // Pure helpers for the Friends screen: what we publish, and how we rank.
 
+// Other people see a display name (strangers too, on a friend request), so it
+// can't carry links or email addresses. The database enforces the same rule.
+const NAME_BLOCKED = /(https?:|www\.|@|\.(com|net|org|io|co|me|ly|xyz|ru|cn)\b)/i;
+
+/** Tidy a name for publishing: one-line, trimmed, 24 characters, and "Singer" if it isn't allowed. */
+export function cleanDisplayName(name: string | undefined | null): string {
+  const tidy = (name ?? '').replace(/[\u0000-\u001f\u007f\s]+/g, ' ').trim().slice(0, 24).trim();
+  return tidy && !NAME_BLOCKED.test(tidy) ? tidy : 'Singer';
+}
+
+/** A plain-language reason a typed name won't be shown to friends, or null if it's fine. */
+export function nameProblem(name: string): string | null {
+  return NAME_BLOCKED.test(name) ? "Friends see this name, so it can't hold a link or email address." : null;
+}
+
 export function hueFor(seed: string): number {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
@@ -22,7 +37,7 @@ export function buildSummary(s: SummarySource, userId: string, now = new Date())
   const week = weekStart(today);
   const graded = s.activity.filter((a) => a.kind !== 'range');
   return {
-    displayName: (s.name || 'Singer').slice(0, 24),
+    displayName: cleanDisplayName(s.name),
     avatarHue: hueFor(userId),
     xp: s.xp,
     level: levelFromXp(s.xp).level,

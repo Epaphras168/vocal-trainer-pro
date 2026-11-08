@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Typecheck, tests, build, browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_CONTACT_EMAIL: beta@example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Build (production, with the headers from vercel.json)
+        run: npm run build
+      - name: Build (mock cloud, for the friends and account screens)
+        run: npm run build:mock
+      - run: npx playwright install --with-deps chromium
+      - name: Browser smoke tests (fake microphone)
+        run: npm run test:e2e
+      - name: Colour contrast, light and dark
+        run: npm run test:contrast
+
+  database:
+    name: Database (row level security and friends)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run test:db

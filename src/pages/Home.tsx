@@ -1,3 +1,4 @@
+import { nameProblem } from '../cloud/summary';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -271,7 +272,12 @@ function GoalsEditor({ onClose }: { onClose: () => void }) {
         <label className="onb__label" htmlFor="ename">
           Name
         </label>
-        <input id="ename" className="field" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
+        <input id="ename" className="field" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} aria-describedby="ename-hint" />
+        {nameProblem(name) && (
+          <p id="ename-hint" className="mute" role="status">
+            {nameProblem(name)} We'll show "Singer" instead.
+          </p>
+        )}
         <p className="onb__label">Why you sing</p>
         <div className="modal__chips">
           {GOALS.map((g) => (

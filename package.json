@@ -3,14 +3,17 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Belto — bite-sized, game-like singing lessons that listen back.",
+  "description": "Belto \u2014 bite-sized, game-like singing lessons that listen back.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:db": "scripts/test-db.sh"
+    "test:db": "scripts/test-db.sh",
+    "build:mock": "VITE_CLOUD_MOCK=true VITE_GOOGLE_SIGNIN=true VITE_CONTACT_EMAIL=beta@example.com vite build --mode e2e --outDir dist-mock",
+    "test:e2e": "node e2e/smoke.mjs",
+    "test:contrast": "node e2e/contrast.mjs"
   },
   "dependencies": {
     "@fontsource-variable/figtree": "^5.3.0",
@@ -30,8 +33,9 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "playwright": "^1.56.1",
     "typescript": "~5.9.2",
     "vite": "^7.1.0",
-    "vitest": "^3.2.0"
+    "vitest": "^5.1.0"
   }
 }

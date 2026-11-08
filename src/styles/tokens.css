@@ -45,7 +45,7 @@
   --line-strong: #5a3666;
   --text: #fbefe2;
   --text-dim: #d6c1d2;
-  --text-mute: #9b8399;
+  --text-mute: #a68ea4;
 
   --gold: #f4d03f;
   --gold-strong: #b8971a;
@@ -62,6 +62,12 @@
   --violet-strong: #6c4fd1;
   --good: #8edc6a;
   --miss: #ff7d8a;
+
+  /* Text-safe versions of the brand colours (4.5:1 on every surface). Same as the base in dark. */
+  --gold-text: var(--gold);
+  --teal-text: var(--teal);
+  --good-text: var(--good);
+  --miss-text: var(--miss);
 
   --tip-bg: #6b5420;
   --tip-text: #fbe9b5;
@@ -89,7 +95,7 @@
   --line-strong: #dcbd9e;
   --text: #2a1230;
   --text-dim: #5e4561;
-  --text-mute: #8e7489;
+  --text-mute: #725d6e;
 
   --gold: #f2c418;
   --gold-strong: #c79a00;
@@ -106,6 +112,12 @@
   --violet-strong: #5134b8;
   --good: #3f9c2a;
   --miss: #d8344a;
+
+  /* Text-safe versions of the brand colours: the bright ones are for fills, these are for words. */
+  --gold-text: #77600c;
+  --teal-text: #0a6f5e;
+  --good-text: #2d701e;
+  --miss-text: #b82c3f;
 
   --tip-bg: #fbe7a6;
   --tip-text: #4d3606;
@@ -126,38 +138,46 @@
   --accent-strong: #c4522a;
   --accent-ink: #2a0f12;
   --accent-soft: rgba(255, 125, 71, 0.15);
+  --accent-text: var(--accent);
 }
 :root[data-theme='light'][data-accent='ember'] {
   --accent: #f26a33;
   --accent-strong: #b3461b;
+  --accent-text: #a24722;
 }
 :root[data-accent='lagoon'] {
   --accent: #2fc7d8;
   --accent-strong: #15808d;
   --accent-ink: #04242a;
   --accent-soft: rgba(47, 199, 216, 0.15);
+  --accent-text: var(--accent);
 }
 :root[data-theme='light'][data-accent='lagoon'] {
   --accent: #14a3b4;
   --accent-strong: #0b6d79;
+  --accent-text: #0d6d79;
 }
 :root[data-accent='orchid'] {
   --accent: #ee6fd8;
   --accent-strong: #a8379a;
   --accent-ink: #2c0626;
   --accent-soft: rgba(238, 111, 216, 0.15);
+  --accent-text: var(--accent);
 }
 :root[data-theme='light'][data-accent='orchid'] {
   --accent: #d54bbd;
   --accent-strong: #93267f;
+  --accent-text: #a0388e;
 }
 :root[data-accent='citrus'] {
   --accent: #a6e04a;
   --accent-strong: #5f8f1c;
   --accent-ink: #172505;
   --accent-soft: rgba(166, 224, 74, 0.15);
+  --accent-text: var(--accent);
 }
 :root[data-theme='light'][data-accent='citrus'] {
   --accent: #7dbd22;
   --accent-strong: #4d7a12;
+  --accent-text: #476c13;
 }

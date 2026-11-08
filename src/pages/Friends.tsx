@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { BookOpen, Check, Copy, Flame, Mic2, Share2, Target, Trophy, UserMinus, UserPlus, X } from 'lucide-react';
+import { BookOpen, Check, Copy, Flame, Flag, Mic2, Share2, ShieldOff, Target, Trophy, UserMinus, UserPlus, X } from 'lucide-react';
 import { ALL_LESSONS } from '../content/curriculum';
 import { cloud, inviteLink, takeInvite, useAccount } from '../cloud/account';
 import { lastSeen, liveStreak, parseFriendCode, rankBoard, type BoardMode, type RankedRow } from '../cloud/summary';
-import type { AddFriendResult, FriendRow } from '../cloud/types';
+import type { AddFriendResult, BlockedPerson, FriendRow } from '../cloud/types';
 import { dayKey, weekStart } from '../game/dates';
 import { useGame } from '../game/store';
 import { sfx } from '../audio/synth';
@@ -20,6 +20,8 @@ const ADD_COPY: Record<AddFriendResult, string> = {
   not_found: "No singer has that code. Double-check it and try again.",
   self: "That's your own code! Share it with a friend instead.",
   limit: "You've hit the friend limit (200). Remove someone to add more.",
+  blocked: "You've blocked that person. Unblock them below first if you want to add them.",
+  rate_limited: 'Too many tries. Wait a little while, then check the code with your friend.',
 };
 
 export function Friends() {
@@ -71,11 +73,14 @@ function Board() {
   const [open, setOpen] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState<BlockedPerson[]>([]);
+  const [safety, setSafety] = useState<FriendRow | null>(null);
 
   const load = useCallback(async () => {
     try {
       const data = await cloud().friendBoard(weekStart(dayKey()));
       setRows(data);
+      setBlocked(await cloud().blockedList().catch(() => []));
       setLoadError(null);
       setFriendCount(data.filter((r) => r.relation === 'friend').length);
     } catch (err) {
@@ -142,6 +147,27 @@ function Board() {
     await load();
   };
 
+  const finishSafety = async (row: FriendRow, action: { block: boolean; report: string | null }) => {
+    try {
+      if (action.report) {
+        const res = await cloud().reportUser(row.id, action.report);
+        if (res === 'rate_limited') say('You have sent a lot of reports today. Blocking still works.');
+      }
+      if (action.block) await cloud().blockUser(row.id);
+      say(action.block ? `${row.name} is blocked.` : 'Thanks. We will look into it.');
+    } catch (err) {
+      say((err as Error).message);
+    }
+    setSafety(null);
+    setOpen(null);
+    await load();
+  };
+
+  const unblock = async (id: string) => {
+    await cloud().unblockUser(id);
+    await load();
+  };
+
   return (
     <>
       {flash && (
@@ -170,6 +196,9 @@ function Board() {
               <button className="icon-btn" onClick={() => respond(r.id, false)} aria-label={`Decline ${r.name}`}>
                 <X size={18} />
               </button>
+              <button className="icon-btn" onClick={() => setSafety(r)} aria-label={`Block or report ${r.name}`} title="Block or report">
+                <ShieldOff size={18} />
+              </button>
             </div>
           ))}
         </section>
@@ -194,7 +223,7 @@ function Board() {
         ) : (
           <ol className="board">
             {ranked.map((r) => (
-              <BoardRow key={r.id} row={r} mode={mode} open={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} onRemove={() => remove(r.id)} />
+              <BoardRow key={r.id} row={r} mode={mode} open={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} onRemove={() => remove(r.id)} onSafety={() => setSafety(r)} />
             ))}
           </ol>
         )}
@@ -207,6 +236,25 @@ function Board() {
       </section>
 
       <AddFriends code={friendCode} onAdd={add} onCopied={say} />
+
+      {safety && <SafetyDialog row={safety} onCancel={() => setSafety(null)} onDone={(a) => finishSafety(safety, a)} />}
+
+      {blocked.length > 0 && (
+        <section className="card friends__outgoing" aria-label="Blocked people">
+          <h2 className="h3">Blocked</h2>
+          {blocked.map((b) => (
+            <div key={b.id} className="request">
+              <Avatar row={{ name: b.name, hue: b.hue } as FriendRow} />
+              <span className="request__name">
+                <strong>{b.name}</strong> can't send you requests
+              </span>
+              <button className="btn btn--ghost btn--sm" onClick={() => unblock(b.id)}>
+                Unblock
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
 
       {outgoing.length > 0 && (
         <section className="card friends__outgoing" aria-label="Sent requests">
@@ -236,7 +284,7 @@ function Avatar({ row, size = 44 }: { row: FriendRow; size?: number }) {
   );
 }
 
-function BoardRow({ row, mode, open, onToggle, onRemove }: { row: RankedRow; mode: BoardMode; open: boolean; onToggle: () => void; onRemove: () => void }) {
+function BoardRow({ row, mode, open, onToggle, onRemove, onSafety }: { row: RankedRow; mode: BoardMode; open: boolean; onToggle: () => void; onRemove: () => void; onSafety: () => void }) {
   const [confirm, setConfirm] = useState(false);
   const isYou = row.relation === 'self';
   const streak = liveStreak(row.streak ?? 0, row.lastActive);
@@ -296,15 +344,54 @@ function BoardRow({ row, mode, open, onToggle, onRemove }: { row: RankedRow; mod
                     </button>
                   </span>
                 ) : (
-                  <button className="btn btn--ghost btn--sm" onClick={() => setConfirm(true)}>
-                    <UserMinus size={16} /> Unfriend
-                  </button>
+                  <span className="row">
+                    <button className="btn btn--ghost btn--sm" onClick={onSafety}>
+                      <Flag size={16} /> Block or report
+                    </button>
+                    <button className="btn btn--ghost btn--sm" onClick={() => setConfirm(true)}>
+                      <UserMinus size={16} /> Unfriend
+                    </button>
+                  </span>
                 ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </li>
+  );
+}
+
+const REPORT_REASONS = ['Rude or inappropriate name', 'Spam or advertising', 'Harassment', 'Something else'];
+
+/** Block someone, with an optional report to whoever runs Belto. */
+function SafetyDialog({ row, onCancel, onDone }: { row: FriendRow; onCancel: () => void; onDone: (a: { block: boolean; report: string | null }) => void }) {
+  const [reason, setReason] = useState<string | null>(null);
+  return (
+    <div className="modal" role="dialog" aria-modal="true" aria-label={`Block or report ${row.name}`}>
+      <div className="modal__card card pop-in" style={{ textAlign: 'left' }}>
+        <h2 className="h2">Block or report {row.name}?</h2>
+        <p className="dim">Blocking removes them from your friends and requests, and they can't add you again. They aren't told. Reports go to whoever runs Belto.</p>
+        <fieldset className="safety__reasons">
+          <legend className="mute">Why? (optional, for a report)</legend>
+          {REPORT_REASONS.map((r) => (
+            <label key={r} className="toggle-row">
+              <input type="radio" name="reason" checked={reason === r} onChange={() => setReason(r)} /> {r}
+            </label>
+          ))}
+        </fieldset>
+        <button className="btn btn--primary btn--block" onClick={() => onDone({ block: true, report: reason })} autoFocus>
+          <ShieldOff size={18} /> {reason ? 'Report and block' : 'Block'}
+        </button>
+        {reason && (
+          <button className="btn btn--ghost btn--block" onClick={() => onDone({ block: false, report: reason })}>
+            Just report
+          </button>
+        )}
+        <button className="btn btn--ghost btn--block" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 

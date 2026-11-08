@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mergeProgress } from './merge';
-import { buildSummary, lastSeen, liveStreak, parseFriendCode, rankBoard } from './summary';
+import { buildSummary, cleanDisplayName, lastSeen, liveStreak, nameProblem, parseFriendCode, rankBoard } from './summary';
 import type { FriendRow } from './types';
 import type { ActivityEntry, GameState } from '../game/store';
 
@@ -129,5 +129,45 @@ describe('mergeProgress', () => {
     expect(m.lastActive).toBe('2026-10-18');
     expect(m.gems).toBe(45);
     expect(m.name).toBe('Epa');
+  });
+});
+
+describe('display names others will see', () => {
+  it('tidies whitespace and length', () => {
+    expect(cleanDisplayName('  Ama \n  Mensah ')).toBe('Ama Mensah');
+    expect(cleanDisplayName('x'.repeat(40))).toHaveLength(24);
+  });
+  it('falls back to "Singer" for blanks, links and email addresses', () => {
+    for (const bad of ['', '   ', null, undefined, 'visit www.spam.example', 'https://x.example', 'me@mail.example', 'cheap.xyz']) expect(cleanDisplayName(bad)).toBe('Singer');
+  });
+  it('keeps ordinary names, including ones with dots or digits', () => {
+    for (const ok of ['Ama', 'DJ Kofi', 'Lena_7', 'Mary-Jane', 'J. Smith']) expect(cleanDisplayName(ok)).toBe(ok);
+  });
+  it('explains a problem name', () => {
+    expect(nameProblem('me@mail.example')).toMatch(/link or email/);
+    expect(nameProblem('Ama')).toBeNull();
+  });
+});
+
+describe('mock backend safety features', () => {
+  it('blocks, lists, refuses and unblocks', async () => {
+    const { mockBackend } = await import('./mockBackend');
+    await mockBackend.signInWithGoogle();
+    const before = await mockBackend.friendBoard('2026-01-05');
+    const other = before.find((r) => r.relation === 'incoming')!;
+    await mockBackend.blockUser(other.id);
+    expect((await mockBackend.friendBoard('2026-01-05')).some((r) => r.id === other.id)).toBe(false);
+    expect((await mockBackend.blockedList()).map((b) => b.id)).toContain(other.id);
+    await mockBackend.unblockUser(other.id);
+    expect(await mockBackend.blockedList()).toHaveLength(0);
+  });
+
+  it('exports and deletes', async () => {
+    const { mockBackend } = await import('./mockBackend');
+    await mockBackend.signInWithGoogle();
+    const data = await mockBackend.exportData();
+    expect(data).toHaveProperty('people');
+    await mockBackend.deleteAccount();
+    expect(await mockBackend.currentUser()).toBeNull();
   });
 });

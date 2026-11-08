@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Headphones, Lock, Mic, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Copy, Headphones, Mic, RefreshCw, ShieldCheck } from 'lucide-react';
 import { pitchEngine } from '../audio/pitchEngine';
 import { micAlreadyGranted, useMicLease, useMicState } from '../hooks/useMic';
+import { browserFamily, inAppBrowser, micHelp } from '../diagnostics/info';
+import { feedbackLink } from './feedback';
 import { Mascot } from './Mascot';
 import './MicGate.css';
 
@@ -18,6 +20,9 @@ export function MicGate({ children, purpose = 'so I can hear your notes and show
   useMicLease();
   const state = useMicState();
   const [checked, setChecked] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const inApp = inAppBrowser();
+  const stuck = feedbackLink('Belto microphone problem');
 
   useEffect(() => {
     let alive = true;
@@ -33,6 +38,38 @@ export function MicGate({ children, purpose = 'so I can hear your notes and show
 
   if (state === 'running') return <>{children}</>;
   if (!checked && state === 'idle') return <div className="micgate micgate--loading" aria-busy="true" />;
+
+  // Browsers inside Instagram, Facebook, WhatsApp and friends usually refuse the mic
+  // for good. Say so up front rather than letting people fail the permission prompt.
+  if (inApp && state !== 'requesting') {
+    const copy = async () => {
+      try {
+        await navigator.clipboard.writeText(location.origin + location.pathname);
+        setCopied(true);
+      } catch {
+        // clipboard blocked: the address is on screen anyway
+      }
+    };
+    return (
+      <div className="micgate card pop-in" role="region" aria-label="Open in your browser">
+        <Mascot mood="encourage" size={120} />
+        <h2 className="h2">Open Belto in your browser</h2>
+        <p className="dim">
+          You're viewing Belto inside {inApp}, and apps like that usually block the microphone. Open this page in Safari or Chrome to sing.
+        </p>
+        <ol className="micgate__steps">
+          <li>Tap the menu (three dots or the share icon).</li>
+          <li>Choose <strong>Open in browser</strong> (or Open in Safari / Chrome).</li>
+        </ol>
+        <button className="btn btn--primary btn--block" onClick={copy}>
+          <Copy size={18} /> {copied ? 'Link copied. Paste it in your browser' : 'Copy the link'}
+        </button>
+        <button className="btn btn--ghost btn--block" onClick={() => pitchEngine.start()}>
+          <Mic size={18} /> Try the microphone anyway
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="micgate card pop-in" role="region" aria-label="Microphone access">
@@ -67,15 +104,18 @@ export function MicGate({ children, purpose = 'so I can hear your notes and show
           <h2 className="h2">The mic is blocked</h2>
           <p className="dim">No worries, it's an easy fix:</p>
           <ol className="micgate__steps">
-            <li>
-              Tap the <Lock size={16} className="inline-icon" /> or settings icon next to the web address.
-            </li>
-            <li>Set <strong>Microphone</strong> to <strong>Allow</strong>.</li>
-            <li>Come back here and try again.</li>
+            {micHelp(browserFamily()).map((step) => (
+              <li key={step}>{step}</li>
+            ))}
           </ol>
           <button className="btn btn--primary btn--block" onClick={() => pitchEngine.start()}>
             <RefreshCw size={18} /> Try again
           </button>
+          {stuck && (
+            <a className="micgate__help" href={stuck}>
+              Still stuck? Tell us
+            </a>
+          )}
         </>
       )}
       {state === 'unsupported' && (
@@ -95,6 +135,11 @@ export function MicGate({ children, purpose = 'so I can hear your notes and show
           <button className="btn btn--primary btn--block" onClick={() => pitchEngine.start()}>
             <RefreshCw size={18} /> Try again
           </button>
+          {stuck && (
+            <a className="micgate__help" href={stuck}>
+              Still stuck? Tell us
+            </a>
+          )}
         </>
       )}
     </div>

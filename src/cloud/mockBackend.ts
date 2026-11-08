@@ -1,10 +1,11 @@
 import { addDays, dayKey, weekStart } from '../game/dates';
-import type { AddFriendResult, CloudBackend, CloudUser, FriendRow, ProfileSummary } from './types';
+import { MIN_PASSWORD } from './password';
+import type { AddFriendResult, BlockedPerson, CloudBackend, CloudUser, FriendRow, ProfileSummary } from './types';
 
 // A pretend server kept in localStorage, for local development and demos
 // without a Supabase project. Enabled with VITE_CLOUD_MOCK=true; never part of
 // a production build otherwise. Google sign-in works instantly, and any
-// email with a password of 6+ characters signs in or signs up.
+// email with a long-enough password signs in or signs up.
 
 const KEY = 'belto-mock-cloud';
 
@@ -14,6 +15,8 @@ interface MockState {
   summary: ProfileSummary | null;
   progress: Record<string, unknown> | null;
   others: FriendRow[];
+  blocked: BlockedPerson[];
+  reports: { id: string; reason: string }[];
 }
 
 function seed(): FriendRow[] {
@@ -44,11 +47,11 @@ function seed(): FriendRow[] {
 function load(): MockState {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as MockState;
+    if (raw) return { blocked: [], reports: [], ...(JSON.parse(raw) as Partial<MockState>) } as MockState;
   } catch {
     // fall through to a fresh state
   }
-  return { user: null, friendCode: 'PIP42X', summary: null, progress: null, others: seed() };
+  return { user: null, friendCode: 'PIP42X', summary: null, progress: null, others: seed(), blocked: [], reports: [] };
 }
 
 let state = load();
@@ -75,12 +78,12 @@ export const mockBackend: CloudBackend = {
   },
   async signInWithPassword(email, password) {
     await wait();
-    if (password.length < 6) throw new Error('Invalid login credentials');
+    if (password.length < MIN_PASSWORD) throw new Error('Invalid login credentials');
     signIn({ id: 'mock-user', email, name: null });
   },
   async signUp(email, password) {
     await wait();
-    if (password.length < 6) throw new Error('Password should be at least 6 characters.');
+    if (password.length < MIN_PASSWORD) throw new Error(`Password should be at least ${MIN_PASSWORD} characters.`);
     signIn({ id: 'mock-user', email, name: null });
     return 'signed-in';
   },
@@ -135,6 +138,7 @@ export const mockBackend: CloudBackend = {
   async addFriend(code): Promise<AddFriendResult> {
     await wait();
     if (code === state.friendCode) return 'self';
+    if (state.blocked.some((b) => b.id === 'm5') && code === 'ZURI77') return 'blocked';
     if (code === 'ZURI77') {
       if (state.others.some((o) => o.id === 'm5')) return 'already_requested';
       state.others.push({ ...seed()[3], id: 'm5', name: 'Zuri', hue: 280, relation: 'outgoing' });
@@ -156,5 +160,36 @@ export const mockBackend: CloudBackend = {
     await wait();
     state.others = state.others.filter((o) => o.id !== otherId);
     save();
+  },
+  async blockUser(otherId) {
+    await wait();
+    const who = state.others.find((o) => o.id === otherId);
+    state.others = state.others.filter((o) => o.id !== otherId);
+    if (who && !state.blocked.some((b) => b.id === otherId)) state.blocked.push({ id: who.id, name: who.name, hue: who.hue });
+    save();
+  },
+  async unblockUser(otherId) {
+    await wait();
+    state.blocked = state.blocked.filter((b) => b.id !== otherId);
+    save();
+  },
+  async blockedList() {
+    return state.blocked;
+  },
+  async reportUser(otherId, reason) {
+    await wait();
+    if (state.reports.length >= 10) return 'rate_limited';
+    state.reports.push({ id: otherId, reason });
+    save();
+    return 'reported';
+  },
+  async exportData() {
+    return { account: state.user, profile: state.summary, progress: state.progress, people: state.others.map((o) => ({ name: o.name, relation: o.relation })), blocked: state.blocked.map((b) => b.name) };
+  },
+  async deleteAccount() {
+    await wait();
+    state = { user: null, friendCode: 'PIP42X', summary: null, progress: null, others: seed(), blocked: [], reports: [] };
+    save();
+    listeners.forEach((l) => l(null));
   },
 };

@@ -97,3 +97,12 @@ src/
 supabase/      database migration and SQL tests
   styles/      tokens + global styles
 ```
+
+## Running a beta
+
+- [docs/BETA_CHECKLIST.md](docs/BETA_CHECKLIST.md): the dashboard, device and people steps that only you can do, in order.
+- [docs/KNOWN_LIMITS.md](docs/KNOWN_LIMITS.md): what testers should know. Send it with the invite.
+- [docs/CURRICULUM.md](docs/CURRICULUM.md): the lessons, what the microphone can and can't judge, and the evidence behind each unit.
+- `npm test` (unit), `npm run test:db` (row level security, needs Postgres), `npm run build && npm run build:mock && npm run test:e2e` (real-browser smoke tests with a fake microphone, served with the production headers), `npm run test:contrast` (colour contrast in both themes). CI runs all of them.
+- Crash reporting (`VITE_SENTRY_DSN`) and the sign-up CAPTCHA (`VITE_TURNSTILE_SITE_KEY`) are optional and off by default; see `.env.example`.
+

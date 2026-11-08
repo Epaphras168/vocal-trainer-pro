@@ -106,7 +106,7 @@ p {
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .dim {
@@ -123,7 +123,7 @@ p {
 
 .italic-accent {
   font-style: italic;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* ---------- Buttons: chunky, pressable ---------- */
@@ -306,7 +306,7 @@ p {
 
 .tile-icon--ink {
   background: var(--bg-deep);
-  color: var(--accent);
+  color: var(--accent-text);
   box-shadow: none;
 }
 
@@ -597,4 +597,20 @@ p {
 .seg button[aria-checked='true'] {
   background: var(--accent);
   color: var(--accent-ink);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.toggle-row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
 }

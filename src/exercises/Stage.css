@@ -79,7 +79,7 @@
 }
 
 .holdmeter__sparkles {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 900;
 }
 
@@ -124,26 +124,10 @@
 
 .notes-strip span[data-state='miss'] {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .notes-strip span[data-state='now'] {
   border-color: var(--gold);
   color: var(--text);
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--text-dim);
-  cursor: pointer;
-}
-
-.toggle-row input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--accent);
 }

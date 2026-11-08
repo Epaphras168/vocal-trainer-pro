@@ -47,7 +47,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 800;
   font-size: 0.9rem;
 }
@@ -87,3 +87,4 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.signin__captcha{min-height:65px;display:flex;justify-content:center}

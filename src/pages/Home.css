@@ -257,7 +257,7 @@
 }
 
 .weekstrip li[data-state='today'] .weekstrip__day {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .weekstrip li[data-state='future'] .weekstrip__dot {
@@ -308,7 +308,7 @@
   align-items: center;
   gap: 4px;
   font-weight: 800;
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.9rem;
 }
 
@@ -337,18 +337,18 @@
 }
 
 .home__goal-icon {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .home__goal-icon--teal {
-  color: var(--teal);
+  color: var(--teal-text);
 }
 
 .home__goal-icon--gold {
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 a.home__goal:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 

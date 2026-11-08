@@ -1,0 +1,16 @@
+name: Feedback or idea
+description: Something that was confusing, too hard, too easy, or missing
+labels: [feedback, beta]
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What would make Belto better?
+      description: Which lesson or screen was it about? How did it make you feel (confused, bored, proud)?
+    validations:
+      required: true
+  - type: dropdown
+    id: voice
+    attributes:
+      label: Singing experience
+      options: [Brand new to singing, Sing for fun, Sing in a choir or worship team, Take lessons or perform]

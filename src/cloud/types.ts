@@ -47,17 +47,33 @@ export interface FriendRow {
   lastActive: string | null;
 }
 
-export type AddFriendResult = 'requested' | 'accepted' | 'already_friends' | 'already_requested' | 'not_found' | 'self' | 'limit';
+export type AddFriendResult =
+  | 'requested'
+  | 'accepted'
+  | 'already_friends'
+  | 'already_requested'
+  | 'not_found'
+  | 'self'
+  | 'limit'
+  | 'blocked'
+  | 'rate_limited';
+
+/** Someone you have blocked. */
+export interface BlockedPerson {
+  id: string;
+  name: string;
+  hue: number;
+}
 
 export interface CloudBackend {
   currentUser(): Promise<CloudUser | null>;
   onAuthChange(cb: (user: CloudUser | null) => void): () => void;
   /** Redirects to Google and back; the session is picked up on return. */
   signInWithGoogle(): Promise<void>;
-  signInWithPassword(email: string, password: string): Promise<void>;
-  signUp(email: string, password: string): Promise<SignUpResult>;
+  signInWithPassword(email: string, password: string, captchaToken?: string): Promise<void>;
+  signUp(email: string, password: string, captchaToken?: string): Promise<SignUpResult>;
   /** Emails a link that brings the singer back to /signin?reset=1, signed in, to choose a new password. */
-  sendPasswordReset(email: string): Promise<void>;
+  sendPasswordReset(email: string, captchaToken?: string): Promise<void>;
   updatePassword(password: string): Promise<void>;
   signOut(): Promise<void>;
 
@@ -71,4 +87,16 @@ export interface CloudBackend {
   addFriend(code: string): Promise<AddFriendResult>;
   respond(otherId: string, accept: boolean): Promise<void>;
   removeFriend(otherId: string): Promise<void>;
+
+  /** Ends any friendship or request with them, and stops either of you adding the other. */
+  blockUser(otherId: string): Promise<void>;
+  unblockUser(otherId: string): Promise<void>;
+  blockedList(): Promise<BlockedPerson[]>;
+  /** Sends a note to whoever runs this project. Ten a day. */
+  reportUser(otherId: string, reason: string): Promise<'reported' | 'rate_limited'>;
+
+  /** Everything the cloud holds about the signed-in singer, for "Download my data". */
+  exportData(): Promise<Record<string, unknown>>;
+  /** Deletes the account and everything stored with it. Progress on this device is untouched. */
+  deleteAccount(): Promise<void>;
 }

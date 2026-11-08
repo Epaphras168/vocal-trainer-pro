@@ -1,0 +1,40 @@
+name: Bug report
+description: Something didn't work while testing Belto
+labels: [bug, beta]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing Belto! The details below are the quickest way to get a fix.
+        Tip: the **Profile** page has a "Tell us" button that opens an email with your device details filled in.
+  - type: input
+    id: build
+    attributes:
+      label: Belto version
+      description: At the bottom of the Profile page, e.g. "v0.1.0 (a1b2c3d, 2026-11-08)".
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: What are you using?
+      options: [iPhone (Safari), iPhone (Chrome), Android phone (Chrome), Other Android browser, Laptop or desktop (Chrome), Laptop or desktop (Safari), Laptop or desktop (Firefox), Laptop or desktop (Edge), Installed to the home screen, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: audio
+    attributes:
+      label: How were you hearing and singing?
+      options: [Phone or laptop speaker and mic, Wired headphones, Bluetooth headphones, Earbuds with a mic, Other]
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead? Which lesson or screen?
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: A screenshot or screen recording helps a lot. Please don't include passwords.

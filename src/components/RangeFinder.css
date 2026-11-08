@@ -30,7 +30,7 @@
 
 .rangefinder__steps span[data-done='true'] {
   border-color: var(--teal);
-  color: var(--teal);
+  color: var(--teal-text);
 }
 
 .rangefinder__grid {
