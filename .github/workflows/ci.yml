@@ -1,5 +1,8 @@
 name: CI
 
+# Runners are pinned (not ubuntu-latest) so a new Ubuntu release can't break the browser install:
+# Playwright only supports certain releases. Move up deliberately, together with Playwright.
+
 on:
   push:
     branches: [main, staging]
@@ -12,7 +15,7 @@ concurrency:
 jobs:
   app:
     name: Typecheck, tests, build, browser tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       VITE_CONTACT_EMAIL: beta@example.com
@@ -38,7 +41,7 @@ jobs:
 
   database:
     name: Database (row level security and friends)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
       postgres:
