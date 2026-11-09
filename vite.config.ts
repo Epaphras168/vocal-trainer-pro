@@ -34,9 +34,12 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           // Long-lived libraries get their own files so a deploy doesn't evict them from caches.
-          manualChunks: {
-            react: ['react', 'react-dom', 'react-router-dom'],
-            motion: ['motion/react'],
+          // The function form is the one both Rollup (Vite 7) and Rolldown (Vite 8) accept.
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) return undefined;
+            if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) return 'react';
+            if (/node_modules\/(motion|motion-dom|motion-utils|framer-motion)\//.test(id)) return 'motion';
+            return undefined;
           },
         },
       },
