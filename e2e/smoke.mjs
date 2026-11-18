@@ -35,12 +35,12 @@ async function test(name, fn) {
 }
 
 /** A fresh browser that hears `clip` as its microphone. */
-async function session(clip, { userAgent, base = prod, theme, extra = {}, micAllowed = true } = {}) {
+async function session(clip, { userAgent, base = prod, theme, extra = {}, micAllowed = true, clipboard = false } = {}) {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
     args: [...(micAllowed ? ['--use-fake-ui-for-media-stream'] : []), '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${clips[clip]}`, '--autoplay-policy=no-user-gesture-required'],
   });
-  const context = await browser.newContext({ viewport: { width: 1100, height: 800 }, permissions: micAllowed ? ['microphone'] : [], userAgent, acceptDownloads: true });
+  const context = await browser.newContext({ viewport: { width: 1100, height: 800 }, permissions: [...(micAllowed ? ['microphone'] : []), ...(clipboard ? ['clipboard-read', 'clipboard-write'] : [])], userAgent, acceptDownloads: true });
   const page = await context.newPage();
   const problems = [];
   page.on('pageerror', (e) => problems.push(`error: ${e.message}`));
@@ -146,6 +146,42 @@ await test('a crash shows the friendly screen, not a blank page', async () => {
   await waitForText(page, /Pip dropped the mic/, 8000);
   assert.match(await body(page), /Reload Belto/);
   assert.match(await body(page), /progress is saved/i);
+  await browser.close();
+});
+
+await test('friends: one click copies the invite link and says so, even without the clipboard API', async () => {
+  const { browser, page, base } = await session('quiet', { base: mock, clipboard: true });
+  await page.goto(`${base}/friends`);
+  await page.getByRole('button', { name: /continue with google/i }).click({ timeout: 10000 });
+  await waitForText(page, /Friend requests/, 15000);
+  const link = `${base}/add/PIP42X`;
+  const clip = () => page.evaluate(() => navigator.clipboard.readText());
+
+  // The normal way.
+  await page.getByRole('button', { name: /copy invite link/i }).click();
+  await waitForText(page, /Copied to your clipboard/, 4000);
+  assert.match(await body(page), /Link copied!/, 'the button itself confirms');
+  assert.equal(await clip(), link, 'the clipboard holds the invite link');
+  assert.match(await body(page), new RegExp(link.replace(/[./]/g, '\\$&')), 'the link is shown so people can see what was copied');
+
+  // The code button says so too.
+  await page.getByRole('button', { name: /^copy code/i }).click();
+  await waitForText(page, /Code\s+PIP42X\s+copied/, 4000);
+  assert.equal(await clip(), 'PIP42X');
+
+  // The modern API refused: the old way still copies.
+  await page.evaluate(() => { navigator.clipboard.writeText = () => Promise.reject(new Error('blocked')); });
+  await page.evaluate(() => navigator.clipboard.writeText = navigator.clipboard.writeText);
+  await page.getByRole('button', { name: /copy invite link/i }).click();
+  await waitForText(page, /Copied to your clipboard/, 4000);
+
+  // Nothing works: show the link to copy by hand rather than claiming success.
+  await page.evaluate(() => { document.execCommand = () => false; });
+  await page.waitForTimeout(4200);
+  await page.getByRole('button', { name: /copy invite link/i }).click();
+  await waitForText(page, /wouldn't let us copy it/, 4000);
+  assert.equal(await page.getByLabel('Invite link', { exact: true }).inputValue(), link);
+  assert.doesNotMatch(await body(page), /Copied to your clipboard/);
   await browser.close();
 });
 

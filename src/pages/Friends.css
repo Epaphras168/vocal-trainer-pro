@@ -367,3 +367,50 @@
   font-weight: 700;
   font-size: 0.9rem;
 }
+
+.friends__feedback {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--s-3);
+}
+
+.friends__copied {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--teal-text);
+}
+
+.friends__copied svg {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
+.friends__copiedlink {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.friends__manual {
+  display: grid;
+  gap: var(--s-2);
+  font-size: 0.9rem;
+}
+
+/* One column on phones: keep the "copied" confirmation right under the buttons that made it. */
+@media (max-width: 639px) {
+  .friends__add .friends__code {
+    order: 0;
+  }
+  .friends__add .friends__feedback {
+    order: 1;
+    margin-top: calc(var(--s-3) * -1);
+  }
+  .friends__add .friends__form {
+    order: 2;
+  }
+}

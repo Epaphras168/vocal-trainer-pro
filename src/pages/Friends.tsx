@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { BookOpen, Check, Copy, Flame, Flag, Mic2, Share2, ShieldOff, Target, Trophy, UserMinus, UserPlus, X } from 'lucide-react';
+import { BookOpen, Check, Copy, Flame, Flag, Link2, Mic2, Share2, ShieldOff, Target, Trophy, UserMinus, UserPlus, X } from 'lucide-react';
 import { ALL_LESSONS } from '../content/curriculum';
 import { cloud, inviteLink, takeInvite, useAccount } from '../cloud/account';
 import { lastSeen, liveStreak, parseFriendCode, rankBoard, type BoardMode, type RankedRow } from '../cloud/summary';
@@ -8,6 +8,7 @@ import type { AddFriendResult, BlockedPerson, FriendRow } from '../cloud/types';
 import { dayKey, weekStart } from '../game/dates';
 import { useGame } from '../game/store';
 import { sfx } from '../audio/synth';
+import { copyText } from '../components/clipboard';
 import { Mascot } from '../components/Mascot';
 import { SignInPanel } from '../components/SignInPanel';
 import './Friends.css';
@@ -235,7 +236,7 @@ function Board() {
         )}
       </section>
 
-      <AddFriends code={friendCode} onAdd={add} onCopied={say} />
+      <AddFriends code={friendCode} onAdd={add} />
 
       {safety && <SafetyDialog row={safety} onCancel={() => setSafety(null)} onDone={(a) => finishSafety(safety, a)} />}
 
@@ -407,33 +408,41 @@ function Stat({ icon, label, value, children }: { icon: React.ReactNode; label: 
   );
 }
 
-function AddFriends({ code, onAdd, onCopied }: { code: string | null; onAdd: (code: string) => Promise<void>; onCopied: (msg: string) => void }) {
+type Copied = 'code' | 'link' | null;
+
+function AddFriends({ code, onAdd }: { code: string | null; onAdd: (code: string) => Promise<void> }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState<Copied>(null);
+  // If the browser won't let us copy, show the link so it can be copied by hand.
+  const [manual, setManual] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const link = code ? inviteLink(code) : '';
 
-  const copy = async (text: string, msg: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const copy = async (what: Exclude<Copied, null>, text: string) => {
+    clearTimeout(timer.current);
+    if (await copyText(text)) {
       sfx('pop');
-      onCopied(msg);
-    } catch {
-      onCopied(text);
+      setManual(null);
+      setCopied(what);
+      timer.current = setTimeout(() => setCopied(null), 4000);
+    } else {
+      setCopied(null);
+      setManual(text);
     }
   };
 
+  // The phone's own share sheet (messages, WhatsApp...). A separate button, so copying always just copies.
   const share = async () => {
     if (!code) return;
-    const url = inviteLink(code);
-    const text = 'Sing with me on Belto! Tap to add me as a friend.';
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'Belto', text, url });
-        return;
-      } catch {
-        // cancelled: fall back to copying
-      }
+    try {
+      await navigator.share({ title: 'Belto', text: 'Sing with me on Belto! Tap to add me as a friend.', url: link });
+    } catch {
+      // cancelled: nothing to do
     }
-    await copy(url, 'Invite link copied. Send it to a friend!');
   };
 
   return (
@@ -442,12 +451,17 @@ function AddFriends({ code, onAdd, onCopied }: { code: string | null; onAdd: (co
         <span className="eyebrow">Your friend code</span>
         <strong className="friends__codeval num">{code ?? '------'}</strong>
         <div className="row">
-          <button className="btn btn--sm" onClick={() => code && copy(code, 'Code copied!')} disabled={!code}>
-            <Copy size={16} /> Copy code
+          <button className={`btn btn--sm ${copied === 'code' ? 'btn--teal' : ''}`} onClick={() => code && copy('code', code)} disabled={!code}>
+            {copied === 'code' ? <Check size={16} /> : <Copy size={16} />} {copied === 'code' ? 'Code copied!' : 'Copy code'}
           </button>
-          <button className="btn btn--primary btn--sm" onClick={share} disabled={!code}>
-            <Share2 size={16} /> Share invite link
+          <button className={`btn btn--sm ${copied === 'link' ? 'btn--teal' : 'btn--primary'}`} onClick={() => copy('link', link)} disabled={!code}>
+            {copied === 'link' ? <Check size={16} /> : <Link2 size={16} />} {copied === 'link' ? 'Link copied!' : 'Copy invite link'}
           </button>
+          {canShare && (
+            <button className="btn btn--sm btn--ghost" onClick={share} disabled={!code} aria-label="Share invite link with another app">
+              <Share2 size={16} /> Share
+            </button>
+          )}
         </div>
       </div>
       <form
@@ -479,6 +493,31 @@ function AddFriends({ code, onAdd, onCopied }: { code: string | null; onAdd: (co
           </button>
         </div>
       </form>
+      {/* Announced to screen readers the moment something is copied. */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {copied === 'link' ? 'Invite link copied to your clipboard.' : copied === 'code' ? 'Friend code copied to your clipboard.' : ''}
+      </p>
+      {(copied || manual) && (
+        <div className="friends__feedback">
+          {copied === 'link' && (
+            <p className="friends__copied pop-in">
+              <Check size={16} /> Copied to your clipboard. Paste it in a message to your friend:
+              <span className="friends__copiedlink num">{link}</span>
+            </p>
+          )}
+          {copied === 'code' && (
+            <p className="friends__copied pop-in">
+              <Check size={16} /> Code <strong className="num">{code}</strong> copied. Your friend types it under "Add a friend".
+            </p>
+          )}
+          {manual && (
+            <label className="friends__manual">
+              <span className="mute">Your browser wouldn't let us copy it. Press and hold, then copy:</span>
+              <input className="field num" readOnly value={manual} onFocus={(e) => e.currentTarget.select()} onClick={(e) => e.currentTarget.select()} aria-label="Invite link" />
+            </label>
+          )}
+        </div>
+      )}
     </section>
   );
 }
